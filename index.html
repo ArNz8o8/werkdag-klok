@@ -3,7 +3,7 @@
   =============================================================
    Backoffice Klok — gemaakt door Arnold den Hartog
    Afdeling: Frontoffice FZ&IT / KICK
-   Versie: 2.2 — Opgepoetst en toekomstbestendig
+   Versie: 2.0 — Video bij 16:29 toegevoegd (nu met preload fix)
   =============================================================
 -->
 <html lang="nl">
@@ -13,17 +13,15 @@
   <title>Klok — Werkdag Teller</title>
   <style>
     @font-face {
-      font-family: 'GT Walsheim Pro';
+      font-family: 'GT-Walsheim-Pro-Bold';
       src: url('GT-Walsheim-Pro-Bold.otf') format('opentype');
       font-weight: bold;
-      font-style: normal;
     }
 
-    :root { color-scheme: dark; }
+    :root { color-scheme: dark }
     html, body { height: 100%; margin: 0; }
-
     body {
-      font-family: 'GT Walsheim Pro', system-ui, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif;
+      font-family: 'GT-Walsheim-Pro-Bold', system-ui, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif;
       display: flex;
       flex-direction: column;
       justify-content: center;
@@ -34,13 +32,7 @@
       color: #fff;
     }
 
-    .clock {
-      font-family: Inter, system-ui, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif;
-      font-size: clamp(80px,14vw,400px);
-      font-weight: 800;
-      margin-top: 0;
-    }
-
+    /* NIEUW: achtergrond-video’s gestacked + fade */
     .bg-video {
       position: fixed;
       top: 0;
@@ -54,7 +46,6 @@
 
     #bg-main { opacity: 1; }
     #bg-1629 { opacity: 0; }
-    #bg-night { opacity: 0; }
 
     #video-overlay {
       position: fixed;
@@ -69,7 +60,7 @@
     .wrap {
       display: flex;
       flex-direction: column;
-      gap: 0;
+      gap: 0.0rem;
       align-items: center;
       justify-content: center;
       padding: 2rem;
@@ -78,62 +69,108 @@
       position: relative;
       z-index: 1;
     }
+    .smalltitle {
+      font-family: 'GT-Walsheim-Pro-Bold', sans-serif;
+      font-size: clamp(20px, 3vw, 28px);
+      opacity: 0.8;
+    }
+    .clock { font-size: clamp(80px,14vw,400px); font-weight: 800; margin-top: 0.0rem; }
 
-    .smalltitle { font-size: clamp(20px, 3vw, 28px); opacity: 0.8; }
-    .message { font-size: clamp(20px,3vw,42px); font-weight: 600; transition: opacity 1s ease; opacity: 1; }
-    #xmas-countdown { font-size: clamp(12px,1.8vw,20px); margin-top: 0.8rem; opacity: 0.5; font-weight: 400; }
-    #counter { font-size: clamp(18px,2.4vw,28px); position: absolute; bottom: 1.8rem; width: 100%; animation: ticker 60s linear infinite; white-space: nowrap; left: 100%; }
-    @keyframes ticker { 0% { transform: translateX(0); } 100% { transform: translateX(-200%); } }
+    .message {
+      font-family: 'GT-Walsheim-Pro-Bold', sans-serif;
+      font-size: clamp(20px,3vw,42px);
+      font-weight: 600;
+      transition: opacity 1s ease;
+      opacity: 1;
+    }
 
-    .logo { position: absolute; top: 20px; right: 30px; max-width: 300px; opacity: .9; transition: opacity .3s ease; z-index: 1; }
+    #xmas-countdown {
+      font-family: 'GT-Walsheim-Pro-Bold', sans-serif;
+      font-size: clamp(12px,1.8vw,20px);
+      margin-top: 0.8rem;
+      opacity: 0.50;
+      font-weight: 400;
+    }
+
+    #counter {
+      font-family: 'GT-Walsheim-Pro-Bold', sans-serif;
+      font-size: clamp(18px,2.4vw,28px);
+      position: absolute;
+      bottom: 1.8rem;
+      width: 100%;
+      animation: ticker 60s linear infinite;
+      white-space: nowrap;
+      left: 100%;
+    }
+    @keyframes ticker {
+      0% { transform: translateX(0); }
+      100% { transform: translateX(-200%); }
+    }
+
+    .logo {
+      position: absolute;
+      top: 20px;
+      right: 30px;
+      max-width: 300px;
+      opacity: .9;
+      transition: opacity .3s ease;
+      z-index: 1;
+    }
     .logo:hover { opacity: 1 }
 
-    #gif-1629 { position: fixed; bottom: 0; left: 0; width: 100%; z-index: 10; display: none; pointer-events: none; }
+    #gif-1629 {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      z-index: 10;
+      display: none;
+      pointer-events: none;
+    }
   </style>
 </head>
 <body>
 
-  <!-- Achtergrondvideo's -->
+  <!-- Preload background video's -->
   <video autoplay muted loop id="bg-main" class="bg-video">
     <source src="background_xmas.mp4" type="video/mp4">
   </video>
+
   <video autoplay muted loop id="bg-1629" class="bg-video">
     <source src="background_alt.mp4" type="video/mp4">
-  </video>
-  <video autoplay muted loop id="bg-night" class="bg-video">
-    <source src="background_night.mp4" type="video/mp4">
   </video>
 
   <div id="video-overlay"></div>
   <img src="HHS_grijs_fc copy.png" alt="Logo" class="logo" />
+
   <img id="gif-1629" src="homer.gif" />
 
   <div class="wrap">
-    <div id="title" class="smalltitle"></div>
+    <div id="title" class="smalltitle">
+      De tijd in de Frontoffice FZ&IT Backoffice is nu:
+    </div>
     <div id="clock" class="clock">--:--</div>
     <div id="message" class="message">...</div>
+
+    <!-- ⭐ COUNTDOWN NAAR KERSTVAKANTIE -->
     <div id="xmas-countdown"></div>
+
   </div>
   <div id="counter"></div>
 
   <script>
     const two = n => String(n).padStart(2, '0');
-    let lastQuoteKey = "";
 
-    // ===============================
-    // DATUM EN KLOK
-    // ===============================
     function setDateInTitle() {
       const title = document.getElementById('title');
       const now = new Date();
       const dagen = ["zondag","maandag","dinsdag","woensdag","donderdag","vrijdag","zaterdag"];
       const maanden = ["januari","februari","maart","april","mei","juni","juli","augustus","september","oktober","november","december"];
-      title.textContent = `Het is ${dagen[now.getDay()]} ${now.getDate()} ${maanden[now.getMonth()]} ${now.getFullYear()} en de tijd bij Frontoffice FZ&IT is nu:`;
+      title.textContent =
+        `Het is ${dagen[now.getDay()]} ${now.getDate()} ${maanden[now.getMonth()]} ${now.getFullYear()} en de tijd bij Frontoffice FZ&IT is nu:`;
     }
+    setDateInTitle();
 
-    // ===============================
-    // QUOTES PER TIJD
-    // ===============================
     const workQuotes = {
       "08:00": "De dag is begonnen. Wat een ellende. Of toch niet 👀",
       "08:30": "De half negen dienst is binnen (hopen we dan). Tijd om echt te knallen!",
@@ -159,98 +196,150 @@
       "19:30": "Vrijheid! 🎉"
     };
 
+    let lastQuoteKey = "";
+
     function setQuoteWithFade(newText) {
       const msg = document.getElementById('message');
       msg.style.opacity = 0;
-      setTimeout(() => { msg.textContent = newText; msg.style.opacity = 1; }, 500);
+      setTimeout(() => {
+        msg.textContent = newText;
+        msg.style.opacity = 1;
+      }, 500);
     }
 
+    /* KERSTVAKANTIE COUNTDOWN */
+    function updateChristmasCountdown() {
+      const countdown = document.getElementById('xmas-countdown');
+      const now = new Date();
+      const target = new Date("2025-12-19T17:00:00");
+
+      const diff = target - now;
+
+      if (diff <= 0) {
+        countdown.textContent = "Kerstvakantie! 🎄✨ Geniet ervan!";
+        return;
+      }
+
+      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+      const hours = Math.floor(diff / (1000 * 60 * 60));
+      const minutes = Math.floor(diff / (1000 * 60));
+
+      if (days > 0) {
+        countdown.textContent = `Nog ${days} dag(en) tot de kerstvakantie.`;
+        return;
+      }
+
+      if (now.getDate() === 19 && now.getHours() >= 8 && now.getHours() < 16) {
+        countdown.textContent = `Nog ${hours} uur tot de kerstvakantie 🎄`;
+        return;
+      }
+
+      if (now.getDate() === 19 && now.getHours() >= 16) {
+        countdown.textContent = `Nog ${minutes} minuten tot de kerstvakantie 🎉`;
+        return;
+      }
+    }
+
+    /* UPDATE QUOTE + VIDEO LOGICA (nu zonder stotteren) */
     function updateQuote() {
       const now = new Date();
       const h = two(now.getHours());
       const m = two(now.getMinutes());
+      const day = now.getDay();
       const timeKey = `${h}:${m}`;
 
       const vidMain = document.getElementById("bg-main");
       const vidAlt = document.getElementById("bg-1629");
-      const vidNight = document.getElementById("bg-night");
 
-      // Speciale 16:29-16:30 overgang
-      if (now.getDay() >= 1 && now.getDay() <= 5 && timeKey === "16:29") {
-        vidMain.style.opacity = 0; vidAlt.style.opacity = 1;
-      } else if (timeKey === "16:30") {
-        vidMain.style.opacity = 1; vidAlt.style.opacity = 0;
+      /* Video fade-switch */
+      if (day >= 1 && day <= 5 && timeKey === "16:29") {
+        vidMain.style.opacity = 0;
+        vidAlt.style.opacity = 1;
+      }
+      else if (timeKey === "16:30") {
+        vidMain.style.opacity = 1;
+        vidAlt.style.opacity = 0;
       }
 
-      // Nachtmodus
-      if (isNightMode(now)) { vidNight.style.opacity = 1; vidMain.style.opacity = 0; vidAlt.style.opacity = 0; }
-      else { vidNight.style.opacity = 0; }
+      let quote = workQuotes[timeKey];
 
-      let quote = workQuotes[timeKey] || workQuotes[`${h}:${m<30?"00":"30"}`] || "Aan het werk zijn we... blijf het doen!";
-      if (timeKey !== lastQuoteKey) { setQuoteWithFade(quote); lastQuoteKey = timeKey; }
+      if (!quote) {
+        const rounded = `${h}:${m < 30 ? "00" : "30"}`;
+        quote = workQuotes[rounded] || "";
+      }
+
+      if (timeKey !== lastQuoteKey) {
+        setQuoteWithFade(quote || "Aan het werk zijn we... blijf het doen!");
+        lastQuoteKey = timeKey;
+      }
     }
 
-    // ===============================
-    // NACHTMODUS
-    // ===============================
-    function isNightMode(now) {
+    /* WEEKEND + NACHTMODUS LOGICA */
+    function isWeekendMode(now) {
       const day = now.getDay();
-      const minutes = now.getHours()*60 + now.getMinutes();
-      if (day >= 1 && day <= 4 && (minutes >= 1170 || minutes < 480)) return true; // Ma-do 19:30-08:00
-      if (day === 5 && minutes >= 1020) return true; // Vrijdag na 17:00
-      if (day === 6 || day === 0) return true; // Weekend
+      const minutes = now.getHours() * 60 + now.getMinutes();
+
+      if (day === 5 && minutes >= 17 * 60) return true;
+      if (day === 6) return true;
+      if (day === 0) return true;
+      if (day === 1 && minutes < 8 * 60) return true;
+
       return false;
     }
 
-    // ===============================
-    // KERSTCOUNTDOWN
-    // ===============================
-    function updateChristmasCountdown() {
-      const countdown = document.getElementById('xmas-countdown');
-      const now = new Date();
-      const year = now.getFullYear();
-      let target = new Date(`${year}-12-19T17:00:00`);
-      if (now > target) target = new Date(`${year+1}-12-19T17:00:00`);
-
-      const diff = target - now;
-      if (diff <= 0) { countdown.textContent = "Kerstvakantie! 🎄✨ Geniet ervan!"; return; }
-
-      const days = Math.floor(diff / (1000*60*60*24));
-      const hours = Math.floor((diff % (1000*60*60*24)) / (1000*60*60));
-      const minutes = Math.floor((diff % (1000*60*60)) / (1000*60));
-
-      if (days > 0) countdown.textContent = `Nog ${days} dag(en) tot de kerstvakantie.`;
-      else if (hours > 0) countdown.textContent = `Nog ${hours} uur tot de kerstvakantie 🎄`;
-      else countdown.textContent = `Nog ${minutes} minuten tot de kerstvakantie 🎉`;
-    }
-
-    // ===============================
-    // KLOK & WERKTELLER
-    // ===============================
     function updateClockAndCounter() {
       const now = new Date();
       const h = two(now.getHours());
       const m = two(now.getMinutes());
+
+      const dagen = ["zondag","maandag","dinsdag","woensdag","donderdag","vrijdag","zaterdag"];
+      const dayNumber = now.getDay();
+      const dayName = dagen[dayNumber];
+
       const clock = document.getElementById('clock');
       const counter = document.getElementById('counter');
       const body = document.body;
-      const dayNumber = now.getDay();
-      const dagen = ["zondag","maandag","dinsdag","woensdag","donderdag","vrijdag","zaterdag"];
-      const dayName = dagen[dayNumber];
 
       clock.textContent = `${h}:${m}`;
 
-      if (isNightMode(now)) {
-        counter.textContent = "Nachtmodus geactiveerd!";
-        setQuoteWithFade("Nachtmodus 🎬 Relaxmodus aan!");
+      if (isWeekendMode(now)) {
+        counter.textContent = "Weekendmodus geactiveerd!";
+        setQuoteWithFade("Weekendmodus geactiveerd! 🎉");
         body.style.background = "#000";
         return;
+      }
+
+      if (dayNumber >= 1 && dayNumber <= 4) {
+        const minutes = now.getHours() * 60 + now.getMinutes();
+        if (minutes < 8 * 60 || minutes >= 19 * 60 + 30) {
+          counter.textContent =
+            `Welkom bij Frontoffice FZ&IT 👏🏼 Gelukkig geen werk meer op deze ${dayName}avond`;
+          setQuoteWithFade("Ontspanmodus staat aan 😴");
+          body.style.background = "#000";
+          return;
+        }
+      }
+
+      if (dayNumber === 5) {
+        const minutes = now.getHours() * 60 + now.getMinutes();
+        if (minutes < 8 * 60) {
+          counter.textContent =
+            `Welkom bij Frontoffice FZ&IT 👏🏼 Gelukkig geen werk op deze ${dayName}morgen`;
+          setQuoteWithFade("Rustig aan, het is nog vroeg 😴");
+          body.style.background = "#000";
+          return;
+        }
       }
 
       body.style.background = "linear-gradient(135deg,#1e3c72,#2a5298)";
 
       let workEndToday = new Date(now);
-      workEndToday.setHours(dayNumber === 5 ? 17 : 19, dayNumber === 5 ? 0 : 30, 0, 0);
+      if (dayNumber === 5) {
+        workEndToday.setHours(17, 0, 0, 0);
+      } else {
+        workEndToday.setHours(19, 30, 0, 0);
+      }
+
       const minutesLeft = Math.ceil((workEndToday - now) / 60000);
 
       counter.textContent =
@@ -258,19 +347,16 @@
         `Je hoeft nog maar ${minutesLeft} minuten tot ${two(workEndToday.getHours())}:${two(workEndToday.getMinutes())}u. Nog even afzien, held. 🚀`;
     }
 
-    // ===============================
-    // INITIALISEER & INTERVAL
-    // ===============================
-    setDateInTitle();
+    /* INIT */
     updateClockAndCounter();
     updateQuote();
     updateChristmasCountdown();
 
     setInterval(() => {
-      setDateInTitle();
       updateClockAndCounter();
       updateQuote();
       updateChristmasCountdown();
+      setDateInTitle();
     }, 1000);
 
   </script>
