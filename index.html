@@ -209,27 +209,41 @@
       }, 500);
     }
 
-    function updateChristmasCountdown() {
-      const countdown = document.getElementById('xmas-countdown');
-      const now = new Date();
-      const target = new Date("2025-12-19T17:00:00");
-      const diff = target - now;
+   function updateChristmasCountdown() {
+    const countdown = document.getElementById('xmas-countdown');
+    const now = new Date();
+    const year = now.getFullYear();
 
-      if (diff <= 0) {
-        countdown.textContent = "Kerstvakantie! 🎄✨ Geniet ervan!";
-        return;
-      }
-
-      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-      const hours = Math.floor(diff / (1000 * 60 * 60));
-      const minutes = Math.floor(diff / (1000 * 60));
-
-      if (days > 0) countdown.textContent = `Nog ${days} dag(en) tot de kerstvakantie.`;
-      else if (now.getDate() === 19 && now.getHours() >= 8 && now.getHours() < 16)
-        countdown.textContent = `Nog ${hours} uur tot de kerstvakantie 🎄`;
-      else if (now.getDate() === 19 && now.getHours() >= 16)
-        countdown.textContent = `Nog ${minutes} minuten tot de kerstvakantie 🎉`;
+    // Vind de laatste vrijdag vóór 25 december van dit jaar
+    let target = new Date(year, 11, 24, 17, 0, 0); // 24 december, 17:00
+    while (target.getDay() !== 5) { // 5 = vrijdag
+        target.setDate(target.getDate() - 1);
     }
+
+    // Als het nu al voorbij is, ga naar volgend jaar
+    if (now > target) {
+        target = new Date(year + 1, 11, 24, 17, 0, 0);
+        while (target.getDay() !== 5) {
+            target.setDate(target.getDate() - 1);
+        }
+    }
+
+    const diff = target - now;
+
+    if (diff <= 0) {
+        countdown.textContent = `Kerstvakantie ${target.getFullYear()}! 🎄✨ Geniet ervan!`;
+        return;
+    }
+
+    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+    const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
+    const minutes = Math.floor((diff / (1000 * 60)) % 60);
+
+    if (days > 0) countdown.textContent = `Nog ${days} dag(en) tot de kerstvakantie van ${target.getFullYear()}.`;
+    else if (hours > 0) countdown.textContent = `Nog ${hours} uur tot de kerstvakantie van ${target.getFullYear()} 🎄`;
+    else countdown.textContent = `Nog ${minutes} minuten tot de kerstvakantie van ${target.getFullYear()} 🎉`;
+}
+
 
     function updateQuote() {
       const now = new Date();
