@@ -228,21 +228,33 @@
         }
     }
 
-    const diff = target - now;
+    const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0);
 
-    if (diff <= 0) {
+    // verschil tussen middernacht en target
+    const dailyDiff = target - startOfDay;
+
+    if (dailyDiff <= 0) {
         countdown.textContent = `Kerstvakantie ${target.getFullYear()}! 🎄✨ Geniet ervan!`;
         return;
     }
 
-    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-    const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
-    const minutes = Math.floor((diff / (1000 * 60)) % 60);
+    // Bereken tijd sinds middernacht voor de "dagelijkse aftelling"
+    const diffSinceMidnight = target - now;
 
-    if (days > 0) countdown.textContent = `Nog ${days} dag(en) tot de kerstvakantie van ${target.getFullYear()}.`;
-    else if (hours > 0) countdown.textContent = `Nog ${hours} uur tot de kerstvakantie van ${target.getFullYear()} 🎄`;
-    else countdown.textContent = `Nog ${minutes} minuten tot de kerstvakantie van ${target.getFullYear()} 🎉`;
+    const days = Math.floor(dailyDiff / (1000 * 60 * 60 * 24));
+    const hours = Math.floor((diffSinceMidnight / (1000 * 60 * 60)) % 24);
+    const minutes = Math.floor((diffSinceMidnight / (1000 * 60)) % 60);
+
+    // Dagelijke countdown output
+    if (days > 0) {
+        countdown.textContent = `Nog ${days} dag(en) tot de kerstvakantie van ${target.getFullYear()}.`;
+    } else if (hours > 0) {
+        countdown.textContent = `Nog ${hours} uur tot de kerstvakantie van ${target.getFullYear()} 🎄`;
+    } else {
+        countdown.textContent = `Nog ${minutes} minuten tot de kerstvakantie van ${target.getFullYear()} 🎉`;
+    }
 }
+
 
 
     function updateQuote() {
@@ -256,7 +268,7 @@
         quote = workQuotes[rounded] || "";
       }
       if (timeKey !== lastQuoteKey) {
-        setQuoteWithFade(quote || "Aan het werk zijn we... blijf het doen!");
+        setQuoteWithFade(quote || "Aan het werk zijn we... waarom ook alweer?");
         lastQuoteKey = timeKey;
       }
     }
@@ -288,7 +300,7 @@
       else { vidDay.style.opacity = 0; vidNight.style.opacity = 1; vidAlt.style.opacity = 0; }
     }
 
-  function updateClockAndCounter() {
+ function updateClockAndCounter() {
   const now = new Date();
   const h = two(now.getHours());
   const m = two(now.getMinutes());
@@ -298,18 +310,54 @@
 
   document.getElementById('clock').textContent = `${h}:${m}`;
 
-  // Eindtijd bepalen (17:00 op vrijdag, 19:30 op andere dagen)
-  let endTime;
-  if (dayNumber === 5) {
-    endTime = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 17, 0, 0);
+  // -------------------------------
+  //  SHIFT-TIJDEN
+  // -------------------------------
+  let shiftStart, shiftEnd;
+
+  if (dayNumber >= 1 && dayNumber <= 4) {
+    // maandag t/m donderdag
+    shiftStart = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 8, 0, 0);
+    shiftEnd   = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 19, 30, 0);
+  } else if (dayNumber === 5) {
+    // vrijdag
+    shiftStart = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 8, 0, 0);
+    shiftEnd   = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 17, 0, 0);
   } else {
-    endTime = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 19, 30, 0);
+    // weekend toont geen aftellen
+    document.getElementById('counter').textContent =
+      `✨ Bro, het is ${dayName}. Er is geen werk vandaag. Ga naar huis. Vier weekend ✨`;
+    return;
+  }
+
+  // -------------------------------
+  // PRE-SHIFT COUNTDOWN 07:45–08:00
+  // -------------------------------
+  const preOpenStart = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 7, 45, 0);
+  const preOpenEnd   = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 8, 0, 0);
+
+  if (now >= preOpenStart && now < preOpenEnd) {
+    const minutesUntilOpen = Math.ceil((preOpenEnd - now) / 60000);
+    const minuteWord = minutesUntilOpen === 1 ? "minuut" : "minuten";
+
+    document.getElementById('counter').textContent =
+      `De Frontoffice opent over ${minutesUntilOpen} ${minuteWord}. Bereid je mentaal voor 😭`;
+    return;
+  }
+
+  // -------------------------------
+  // CHECK: binnen shift?
+  // -------------------------------
+  if (now < shiftStart || now > shiftEnd) {
+    document.getElementById('counter').textContent =
+      `✨ Het is buiten werktijd. Dus als je dit leest, waarom ben je hier ✨`;
+    return;
   }
 
   // Minuten die nog over zijn
-  const minutesLeft = Math.ceil((endTime - now) / 60000);
+  const minutesLeft = Math.ceil((shiftEnd - now) / 60000);
 
-  // --- Motivatielevels (23 stuks) ---
+  // --- Motivatielevels ---
   const messages = [
     "Nog even afzien, held. De koffie is sterker dan jij, maar je leeft nog",
     "Jij draait als een oude follow me printer. Piepend, maar functioneel",
@@ -336,39 +384,38 @@
     "JIJ. BENT. EEN. LEGENDE. De eindtijd buigt voor je. Het universum applaudisseert"
   ];
 
-  // --- Bepalen welk motivatielevel hoort bij de huidige tijd ---
-  const bucketSize = 30;   // elke 30 minuten next level
-  const maxMinutes = 690;  // totaal 11,5 uur
+  // Motivatie-levels berekenen
+  const bucketSize = 30;
+  const totalMinutes = (shiftEnd - shiftStart) / 60000;
   const totalBuckets = messages.length;
 
   const bucketIndex = Math.min(
     totalBuckets - 1,
-    Math.floor((maxMinutes - minutesLeft) / bucketSize)
+    Math.floor((totalMinutes - minutesLeft) / bucketSize)
   );
 
   const motivationMessage = messages[bucketIndex];
 
-  // --- Superlatieven voor maandag t/m vrijdag ---
+  // Superlatieven per dag
   const dayMoodWords = [
-    "mooie",           // zondag
-    "vreselijke",      // maandag
-    "matige",          // dinsdag
-    "neutrale",        // woensdag
-    "prima",           // donderdag
-    "fantastische",    // vrijdag
-    "mooie"            // zaterdag
+    "mooie",
+    "vreselijke",
+    "matige",
+    "neutrale",
+    "prima",
+    "fantastische",
+    "mooie"
   ];
 
   const moodWord = dayMoodWords[dayNumber] || "";
 
-  // Final output
   document.getElementById('counter').textContent =
     `✨ Welkom bij Frontoffice FZ&IT ✨ Succes met je dienst op deze ${moodWord} ${dayName} ` +
-    `✨ Er zijn nog ${minutesLeft} minuten te gaan tot het einde van de shift van deze werkdag ✨ ${motivationMessage} ✨`;
+    `✨ Er zijn nog ${minutesLeft} minuten te gaan tot het einde van de shift ✨ ${motivationMessage} ✨`;
 }
 
 
-// (optionele) helperfunctie als je die later nog gebruikt
+// (optionele) helperfunctie
 function getMotivationMessage(minutesLeft, totalMinutes) {
   const segments = messages.length;
   const fraction = 1 - (minutesLeft / totalMinutes);
