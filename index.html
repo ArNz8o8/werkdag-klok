@@ -3,7 +3,7 @@
   =============================================================
    Backoffice Klok — gemaakt door Arnold den Hartog
    Afdeling: Frontoffice FZ&IT / KICK
-   Versie: 2.0 — Video bij 16:29 toegevoegd (nu met preload fix)
+   Versie: 2.2 — Video, ticker en alles compleet
   =============================================================
 -->
 <html lang="nl">
@@ -32,7 +32,6 @@
       color: #fff;
     }
 
-    /* NIEUW: achtergrond-video’s gestacked + fade */
     .bg-video {
       position: fixed;
       top: 0;
@@ -44,8 +43,9 @@
       transition: opacity 1s ease;
     }
 
-    #bg-main { opacity: 1; }
-    #bg-1629 { opacity: 0; }
+    #bg-day { opacity: 1; }
+    #bg-night { opacity: 0; }
+    #bg-alt { opacity: 0; }
 
     #video-overlay {
       position: fixed;
@@ -69,11 +69,13 @@
       position: relative;
       z-index: 1;
     }
+
     .smalltitle {
       font-family: 'GT-Walsheim-Pro-Bold', sans-serif;
       font-size: clamp(20px, 3vw, 28px);
       opacity: 0.8;
     }
+
     .clock { font-size: clamp(80px,14vw,400px); font-weight: 800; margin-top: 0.0rem; }
 
     .message {
@@ -102,6 +104,7 @@
       white-space: nowrap;
       left: 100%;
     }
+
     @keyframes ticker {
       0% { transform: translateX(0); }
       100% { transform: translateX(-200%); }
@@ -132,17 +135,20 @@
 <body>
 
   <!-- Preload background video's -->
-  <video autoplay muted loop id="bg-main" class="bg-video">
-    <source src="background_xmas.mp4" type="video/mp4">
+  <video autoplay muted loop id="bg-day" class="bg-video">
+    <source src="background_day.mp4" type="video/mp4">
   </video>
 
-  <video autoplay muted loop id="bg-1629" class="bg-video">
+  <video autoplay muted loop id="bg-night" class="bg-video">
+    <source src="background_night.mp4" type="video/mp4">
+  </video>
+
+  <video autoplay muted loop id="bg-alt" class="bg-video">
     <source src="background_alt.mp4" type="video/mp4">
   </video>
 
   <div id="video-overlay"></div>
   <img src="HHS_grijs_fc copy.png" alt="Logo" class="logo" />
-
   <img id="gif-1629" src="homer.gif" />
 
   <div class="wrap">
@@ -151,12 +157,9 @@
     </div>
     <div id="clock" class="clock">--:--</div>
     <div id="message" class="message">...</div>
-
-    <!-- ⭐ COUNTDOWN NAAR KERSTVAKANTIE -->
     <div id="xmas-countdown"></div>
-
   </div>
-  <div id="counter"></div>
+  <div id="counter">Welkom bij Frontoffice FZ&IT!</div>
 
   <script>
     const two = n => String(n).padStart(2, '0');
@@ -169,7 +172,6 @@
       title.textContent =
         `Het is ${dagen[now.getDay()]} ${now.getDate()} ${maanden[now.getMonth()]} ${now.getFullYear()} en de tijd bij Frontoffice FZ&IT is nu:`;
     }
-    setDateInTitle();
 
     const workQuotes = {
       "08:00": "De dag is begonnen. Wat een ellende. Of toch niet 👀",
@@ -207,12 +209,10 @@
       }, 500);
     }
 
-    /* KERSTVAKANTIE COUNTDOWN */
     function updateChristmasCountdown() {
       const countdown = document.getElementById('xmas-countdown');
       const now = new Date();
       const target = new Date("2025-12-19T17:00:00");
-
       const diff = target - now;
 
       if (diff <= 0) {
@@ -224,141 +224,163 @@
       const hours = Math.floor(diff / (1000 * 60 * 60));
       const minutes = Math.floor(diff / (1000 * 60));
 
-      if (days > 0) {
-        countdown.textContent = `Nog ${days} dag(en) tot de kerstvakantie.`;
-        return;
-      }
-
-      if (now.getDate() === 19 && now.getHours() >= 8 && now.getHours() < 16) {
+      if (days > 0) countdown.textContent = `Nog ${days} dag(en) tot de kerstvakantie.`;
+      else if (now.getDate() === 19 && now.getHours() >= 8 && now.getHours() < 16)
         countdown.textContent = `Nog ${hours} uur tot de kerstvakantie 🎄`;
-        return;
-      }
-
-      if (now.getDate() === 19 && now.getHours() >= 16) {
+      else if (now.getDate() === 19 && now.getHours() >= 16)
         countdown.textContent = `Nog ${minutes} minuten tot de kerstvakantie 🎉`;
-        return;
-      }
     }
 
-    /* UPDATE QUOTE + VIDEO LOGICA (nu zonder stotteren) */
     function updateQuote() {
       const now = new Date();
       const h = two(now.getHours());
       const m = two(now.getMinutes());
-      const day = now.getDay();
       const timeKey = `${h}:${m}`;
-
-      const vidMain = document.getElementById("bg-main");
-      const vidAlt = document.getElementById("bg-1629");
-
-      /* Video fade-switch */
-      if (day >= 1 && day <= 5 && timeKey === "16:29") {
-        vidMain.style.opacity = 0;
-        vidAlt.style.opacity = 1;
-      }
-      else if (timeKey === "16:30") {
-        vidMain.style.opacity = 1;
-        vidAlt.style.opacity = 0;
-      }
-
       let quote = workQuotes[timeKey];
-
       if (!quote) {
         const rounded = `${h}:${m < 30 ? "00" : "30"}`;
         quote = workQuotes[rounded] || "";
       }
-
       if (timeKey !== lastQuoteKey) {
         setQuoteWithFade(quote || "Aan het werk zijn we... blijf het doen!");
         lastQuoteKey = timeKey;
       }
     }
 
-    /* WEEKEND + NACHTMODUS LOGICA */
-    function isWeekendMode(now) {
+    function updateBackgroundVideo() {
+      const now = new Date();
       const day = now.getDay();
       const minutes = now.getHours() * 60 + now.getMinutes();
 
-      if (day === 5 && minutes >= 17 * 60) return true;
-      if (day === 6) return true;
-      if (day === 0) return true;
-      if (day === 1 && minutes < 8 * 60) return true;
+      const vidDay = document.getElementById("bg-day");
+      const vidNight = document.getElementById("bg-night");
+      const vidAlt = document.getElementById("bg-alt");
 
-      return false;
+      if (day >= 1 && day <= 5 && minutes === 16*60 + 29) {
+        vidDay.style.opacity = 0; vidNight.style.opacity = 0; vidAlt.style.opacity = 1; return;
+      }
+      if (day >= 1 && day <= 5 && minutes === 16*60 + 30) {
+        vidDay.style.opacity = 1; vidNight.style.opacity = 0; vidAlt.style.opacity = 0; return;
+      }
+
+      let isDay = false;
+      if (day >= 1 && day <= 4) {
+        if ((minutes >= 8*60 && minutes <= 16*60+29) || (minutes >= 16*60+30 && minutes <= 19*60+30)) isDay = true;
+      } else if (day === 5) {
+        if ((minutes >= 8*60 && minutes <= 16*60+29) || (minutes >= 16*60+30 && minutes <= 17*60)) isDay = true;
+      }
+
+      if (isDay) { vidDay.style.opacity = 1; vidNight.style.opacity = 0; vidAlt.style.opacity = 0; }
+      else { vidDay.style.opacity = 0; vidNight.style.opacity = 1; vidAlt.style.opacity = 0; }
     }
 
-    function updateClockAndCounter() {
-      const now = new Date();
-      const h = two(now.getHours());
-      const m = two(now.getMinutes());
+  function updateClockAndCounter() {
+  const now = new Date();
+  const h = two(now.getHours());
+  const m = two(now.getMinutes());
+  const dayNumber = now.getDay();
+  const dagen = ["zondag","maandag","dinsdag","woensdag","donderdag","vrijdag","zaterdag"];
+  const dayName = dagen[dayNumber];
 
-      const dagen = ["zondag","maandag","dinsdag","woensdag","donderdag","vrijdag","zaterdag"];
-      const dayNumber = now.getDay();
-      const dayName = dagen[dayNumber];
+  document.getElementById('clock').textContent = `${h}:${m}`;
 
-      const clock = document.getElementById('clock');
-      const counter = document.getElementById('counter');
-      const body = document.body;
+  // Eindtijd bepalen (17:00 op vrijdag, 19:30 op andere dagen)
+  let endTime;
+  if (dayNumber === 5) {
+    endTime = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 17, 0, 0);
+  } else {
+    endTime = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 19, 30, 0);
+  }
 
-      clock.textContent = `${h}:${m}`;
+  // Minuten die nog over zijn
+  const minutesLeft = Math.ceil((endTime - now) / 60000);
 
-      if (isWeekendMode(now)) {
-        counter.textContent = "Weekendmodus geactiveerd!";
-        setQuoteWithFade("Weekendmodus geactiveerd! 🎉");
-        body.style.background = "#000";
-        return;
-      }
+  // --- Motivatielevels (23 stuks) ---
+  const messages = [
+    "Nog even afzien, held. De koffie is sterker dan jij, maar je leeft nog. 🚀",
+    "Jij draait als een oude follow me printer. Piepend, maar functioneel.",
+    "Je houdt het vol, al voelt het alsof je in een kamer zonder verwarming zit. Wat half waar is.",
+    "Je zit in een prima flow. Niet geweldig, niet slecht, gewoon ‘tsja, werk’.",
+    "Systemen crashen? Jij niet. Jij bent de laatste Directory Manager die overeind blijft.",
+    "Je hebt de vibe van iemand die Azure AD met één hand kan fixen.",
+    "Je bent officieel ‘boven verwachting functionerend’, al staat het nergens.",
+    "De energie komt op gang. Je bent basically een menselijke OpenIDM-sync.",
+    "Je gaat harder dan Ozan die een teamuitje plant.",
+    "Dit begint op iets indrukwekkends te lijken. De backoffice voelt je aanwezigheid.",
+    "Halverwege en je straalt als een monitor in het donker.",
+    "Je hebt meer momentum dan Fast X in 4D.",
+    "Je dendert door processen als een incident waar geen kennisitem voor bestaat.",
+    "Je workflow is smoother dan een Gusto-lasagne.",
+    "De eindtijd voelt ineens realistisch. Tijd? Tijd is een illusie. Jij niet.",
+    "Je bent on fire. Als iemand nu belt met ‘mijn wachtwoord werkt niet’— you got this. 🔥",
+    "Je bent basically de Functioneel Beheerder Onstage van deze werkdag.",
+    "Je houdt de boel bij elkaar als duct tape in een serverruimte.",
+    "Je bent sneller dan het moment dat DM eindelijk werd uitgefaseerd.",
+    "Ruik je die finish al? Hij ruikt naar vrijheid en een warme jas.",
+    "Laatste fase. Je gaat als een tierelier. De tijd is bang voor jou.",
+    "Nog héél even en je ontsnapt uit deze digitale jungle als een ware ontsnappingskunstenaar.",
+    "JIJ. BENT. EEN. LEGENDE. De eindtijd buigt voor je. Het universum applaudisseert."
+  ];
 
-      if (dayNumber >= 1 && dayNumber <= 4) {
-        const minutes = now.getHours() * 60 + now.getMinutes();
-        if (minutes < 8 * 60 || minutes >= 19 * 60 + 30) {
-          counter.textContent =
-            `Welkom bij Frontoffice FZ&IT 👏🏼 Gelukkig geen werk meer op deze ${dayName}avond`;
-          setQuoteWithFade("Ontspanmodus staat aan 😴");
-          body.style.background = "#000";
-          return;
-        }
-      }
+  // --- Bepalen welk motivatielevel hoort bij de huidige tijd ---
+  const bucketSize = 30;   // elke 30 minuten next level
+  const maxMinutes = 690;  // totaal 11,5 uur
+  const totalBuckets = messages.length;
 
-      if (dayNumber === 5) {
-        const minutes = now.getHours() * 60 + now.getMinutes();
-        if (minutes < 8 * 60) {
-          counter.textContent =
-            `Welkom bij Frontoffice FZ&IT 👏🏼 Gelukkig geen werk op deze ${dayName}morgen`;
-          setQuoteWithFade("Rustig aan, het is nog vroeg 😴");
-          body.style.background = "#000";
-          return;
-        }
-      }
+  const bucketIndex = Math.min(
+    totalBuckets - 1,
+    Math.floor((maxMinutes - minutesLeft) / bucketSize)
+  );
 
-      body.style.background = "linear-gradient(135deg,#1e3c72,#2a5298)";
+  const motivationMessage = messages[bucketIndex];
 
-      let workEndToday = new Date(now);
-      if (dayNumber === 5) {
-        workEndToday.setHours(17, 0, 0, 0);
-      } else {
-        workEndToday.setHours(19, 30, 0, 0);
-      }
+  // --- Superlatieven voor maandag t/m vrijdag ---
+  const dayMoodWords = [
+    "mooie",           // zondag
+    "vreselijke",      // maandag
+    "matige",          // dinsdag
+    "neutrale",        // woensdag
+    "prima",           // donderdag
+    "fantastische",    // vrijdag
+    "mooie"            // zaterdag
+  ];
 
-      const minutesLeft = Math.ceil((workEndToday - now) / 60000);
+  const moodWord = dayMoodWords[dayNumber] || "";
 
-      counter.textContent =
-        `Welkom bij Frontoffice FZ&IT 👏🏼 Succes met je dienst op deze mooie ${dayName}. ` +
-        `Je hoeft nog maar ${minutesLeft} minuten tot ${two(workEndToday.getHours())}:${two(workEndToday.getMinutes())}u. Nog even afzien, held. 🚀`;
-    }
+  // Final output
+  document.getElementById('counter').textContent =
+    `✨ Welkom bij Frontoffice FZ&IT ✨ Succes met je dienst op deze ${moodWord} ${dayName} ` +
+    `✨ Je hoeft nog maar ${minutesLeft} minuten tot het einde van de werkdag ✨ ${motivationMessage} ✨`;
+}
 
-    /* INIT */
+
+// (optionele) helperfunctie als je die later nog gebruikt
+function getMotivationMessage(minutesLeft, totalMinutes) {
+  const segments = messages.length;
+  const fraction = 1 - (minutesLeft / totalMinutes);
+  const index = Math.min(
+    segments - 1,
+    Math.floor(fraction * segments)
+  );
+  return messages[index];
+}
+
+
+
+    /* INIT + INTERVAL */
     updateClockAndCounter();
     updateQuote();
     updateChristmasCountdown();
+    updateBackgroundVideo();
+    setDateInTitle();
 
     setInterval(() => {
       updateClockAndCounter();
       updateQuote();
       updateChristmasCountdown();
+      updateBackgroundVideo();
       setDateInTitle();
     }, 1000);
-
   </script>
 </body>
 </html>
