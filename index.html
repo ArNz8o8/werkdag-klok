@@ -18,6 +18,7 @@
       font-weight: bold;
     }
 
+    
     :root { color-scheme: dark }
     html, body { height: 100%; margin: 0; }
     body {
@@ -214,46 +215,42 @@
     const now = new Date();
     const year = now.getFullYear();
 
-    // Vind de laatste vrijdag vóór 25 december van dit jaar
-    let target = new Date(year, 11, 24, 17, 0, 0); // 24 december, 17:00
+    // Laatste vrijdag vóór 25 december om 17:00
+    let target = new Date(year, 11, 24, 17, 0, 0); // 24 dec 17:00
     while (target.getDay() !== 5) { // 5 = vrijdag
         target.setDate(target.getDate() - 1);
     }
 
-    // Als het nu al voorbij is, ga naar volgend jaar
-    if (now > target) {
+    // Als kerstvakantie al voorbij is → volgend jaar
+    if (now >= target) {
         target = new Date(year + 1, 11, 24, 17, 0, 0);
         while (target.getDay() !== 5) {
             target.setDate(target.getDate() - 1);
         }
     }
 
-    const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0);
+    const diffMs = target - now;
 
-    // verschil tussen middernacht en target
-    const dailyDiff = target - startOfDay;
-
-    if (dailyDiff <= 0) {
+    if (diffMs <= 0) {
         countdown.textContent = `Kerstvakantie ${target.getFullYear()}! 🎄✨ Geniet ervan!`;
         return;
     }
 
-    // Bereken tijd sinds middernacht voor de "dagelijkse aftelling"
-    const diffSinceMidnight = target - now;
+    const totalMinutes = Math.floor(diffMs / (1000 * 60));
+    const totalHours = Math.floor(diffMs / (1000 * 60 * 60));
+    const days = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+    const hours = totalHours % 24;
+    const minutes = totalMinutes % 60;
 
-    const days = Math.floor(dailyDiff / (1000 * 60 * 60 * 24));
-    const hours = Math.floor((diffSinceMidnight / (1000 * 60 * 60)) % 24);
-    const minutes = Math.floor((diffSinceMidnight / (1000 * 60)) % 60);
-
-    // Dagelijke countdown output
-    if (days > 0) {
-        countdown.textContent = `Nog ${days} dag(en) tot de kerstvakantie van ${target.getFullYear()}.`;
+    if (days > 1) {
+        countdown.textContent = `Nog ${days} dagen tot de kerstvakantie van ${target.getFullYear()} 🎄`;
     } else if (hours > 0) {
         countdown.textContent = `Nog ${hours} uur tot de kerstvakantie van ${target.getFullYear()} 🎄`;
     } else {
         countdown.textContent = `Nog ${minutes} minuten tot de kerstvakantie van ${target.getFullYear()} 🎉`;
     }
 }
+
 
 
 
@@ -268,7 +265,7 @@
         quote = workQuotes[rounded] || "";
       }
       if (timeKey !== lastQuoteKey) {
-        setQuoteWithFade(quote || "Aan het werk zijn we... waarom ook alweer?");
+        setQuoteWithFade(quote || "Momenteel is de Frontoffice FZ&IT gesloten.");
         lastQuoteKey = timeKey;
       }
     }
@@ -300,7 +297,11 @@
       else { vidDay.style.opacity = 0; vidNight.style.opacity = 1; vidAlt.style.opacity = 0; }
     }
 
- function updateClockAndCounter() {
+    // Globale variabelen
+    let lastOutsideMinute = null;
+    let cachedOutsideMessage = "";
+
+ function updateClockAndCounter() {  
   const now = new Date();
   const h = two(now.getHours());
   const m = two(now.getMinutes());
@@ -324,7 +325,7 @@
     shiftStart = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 8, 0, 0);
     shiftEnd   = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 17, 0, 0);
   } else {
-    // weekend toont geen aftellen
+    // weekend
     document.getElementById('counter').textContent =
       `✨ Bro, het is ${dayName}. Er is geen werk vandaag. Ga naar huis. Vier weekend ✨`;
     return;
@@ -346,35 +347,59 @@
   }
 
   // -------------------------------
-  // CHECK: binnen shift?
+  // BUITEN SHIFT → WISSEL ELKE 5 MINUTEN
   // -------------------------------
   if (now < shiftStart || now > shiftEnd) {
-    document.getElementById('counter').textContent =
-      `✨ Het is buiten werktijd. Dus als je dit leest, waarom ben je hier ✨`;
+
+    const outsideShiftMessages = [
+      "✨ Het is buiten werktijd. Dit systeem mist je al, maar jij hoeft er niet te zijn ✨",
+      "✨ Buiten de shift en tóch hier? Dapper. Maar ga leven ✨",
+      "✨ Geen dienst, geen stress, geen tickets. Vrijheid ✨",
+      "✨ Je bent off-duty. Zelfs Directory Manager zou dit begrijpen ✨",
+      "✨ Dit is geen werkmoment. Dit is een ‘sluit je laptop’-moment ✨",
+      "✨ De Frontoffice slaapt. Jij zou dat ook moeten doen ✨",
+      "✨ Buiten werktijd. De systemen wachten wel. Jij niet ✨"
+    ];
+
+    // Bepaal het huidige 5-minutenblok (0–11 per uur)
+    const fiveMinuteBlock = Math.floor(now.getMinutes() / 5);
+
+    if (fiveMinuteBlock !== lastOutsideBlock) {
+      lastOutsideBlock = fiveMinuteBlock;
+
+      // Zorgt voor nette rotatie door de lijst
+      const messageIndex =
+        (Math.floor(now.getTime() / (5 * 60 * 1000))) % outsideShiftMessages.length;
+
+      cachedOutsideMessage = outsideShiftMessages[messageIndex];
+    }
+
+    document.getElementById('counter').textContent = cachedOutsideMessage;
     return;
   }
 
-  // Minuten die nog over zijn
+  // -------------------------------
+  // BINNEN SHIFT
+  // -------------------------------
   const minutesLeft = Math.ceil((shiftEnd - now) / 60000);
 
-  // --- Motivatielevels ---
   const messages = [
-    "Nog even afzien, held. De koffie is sterker dan jij, maar je leeft nog",
+    "Het is weer begonnen, die werkdag. Het is niet anders, dus we gaan het gewoon doen",
     "Jij draait als een oude follow me printer. Piepend, maar functioneel",
     "Je houdt het vol, al voelt het alsof je in een kamer zonder verwarming zit. Wat half waar is",
-    "Je zit in een prima flow. Niet geweldig, niet slecht, gewoon ‘tsja, werk’",
+    "Je zit in een prima flow. Niet geweldig, niet slecht, gewoon... werk",
     "Systemen crashen? Jij niet. Jij bent de laatste Directory Manager die overeind blijft",
     "Je hebt de vibe van iemand die Azure AD met één hand kan fixen",
-    "Je bent officieel ‘boven verwachting functionerend’, al staat het nergens",
+    "Je bent officieel boven verwachting aan het functioneren, al staat het nergens",
     "De energie komt op gang. Je bent basically een menselijke OpenIDM-sync",
-    "Je gaat harder dan Ozan die een teamuitje plant",
+    "Je gaat harder dan Ozan die een teamuitje planned",
     "Dit begint op iets indrukwekkends te lijken. De backoffice voelt je aanwezigheid",
     "Halverwege en je straalt als een monitor in het donker",
-    "Je hebt meer momentum dan Fast X in 4D",
+    "Je hebt meer momentum dan de mensen in Poseidon",
     "Je dendert door processen als een incident waar geen kennisitem voor bestaat",
-    "Je workflow is smoother dan een Gusto-lasagne",
+    "Je workflow is smoother dan een havercappu van Stacey",
     "De eindtijd voelt ineens realistisch. Tijd? Tijd is een illusie. Jij niet",
-    "Je bent on fire. Als iemand nu belt met ‘mijn wachtwoord werkt niet’— you got this",
+    "Je bent on fire. Als iemand nu belt met: Mijn wachtwoord werkt niet... you got this",
     "Je bent basically de Functioneel Beheerder Onstage van deze werkdag.",
     "Je houdt de boel bij elkaar als duct tape in een serverruimte",
     "Je bent sneller dan het moment dat DM eindelijk werd uitgefaseerd",
@@ -384,7 +409,6 @@
     "JIJ. BENT. EEN. LEGENDE. De eindtijd buigt voor je. Het universum applaudisseert"
   ];
 
-  // Motivatie-levels berekenen
   const bucketSize = 30;
   const totalMinutes = (shiftEnd - shiftStart) / 60000;
   const totalBuckets = messages.length;
@@ -396,7 +420,6 @@
 
   const motivationMessage = messages[bucketIndex];
 
-  // Superlatieven per dag
   const dayMoodWords = [
     "mooie",
     "vreselijke",
@@ -413,20 +436,6 @@
     `✨ Welkom bij Frontoffice FZ&IT ✨ Succes met je dienst op deze ${moodWord} ${dayName} ` +
     `✨ Er zijn nog ${minutesLeft} minuten te gaan tot het einde van de shift ✨ ${motivationMessage} ✨`;
 }
-
-
-// (optionele) helperfunctie
-function getMotivationMessage(minutesLeft, totalMinutes) {
-  const segments = messages.length;
-  const fraction = 1 - (minutesLeft / totalMinutes);
-  const index = Math.min(
-    segments - 1,
-    Math.floor(fraction * segments)
-  );
-  return messages[index];
-}
-
-
 
     /* INIT + INTERVAL */
     updateClockAndCounter();
