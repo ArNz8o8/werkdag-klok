@@ -3,7 +3,7 @@
   =============================================================
    Backoffice Klok — gemaakt door Arnold den Hartog
    Afdeling: Frontoffice FZ&IT / KICK
-   Versie: 2.2 — Video, ticker en alles compleet
+   Versie: 3.0 — Video, ticker en alles compleet
   =============================================================
 -->
 <html lang="nl">
@@ -12,56 +12,55 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Klok — Werkdag Teller</title>
   <style>
+    /* --- FONTS --- */
     @font-face {
       font-family: 'GT-Walsheim-Pro-Bold';
       src: url('GT-Walsheim-Pro-Bold.otf') format('opentype');
       font-weight: bold;
     }
 
-    
-    :root { color-scheme: dark }
+    /* --- BASE STYLES --- */
+    :root { color-scheme: dark; }
     html, body { height: 100%; margin: 0; }
+    
     body {
-      font-family: 'GT-Walsheim-Pro-Bold', system-ui, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif;
+      font-family: 'GT-Walsheim-Pro-Bold', system-ui, -apple-system, sans-serif;
       display: flex;
       flex-direction: column;
       justify-content: center;
       align-items: center;
       text-align: center;
       overflow: hidden;
-      transition: background 1s ease, color 0.8s ease;
       color: #fff;
+      background-color: #000; /* Fallback */
     }
 
+    /* --- BACKGROUND VIDEO --- */
     .bg-video {
       position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
       object-fit: cover;
       z-index: -2;
       transition: opacity 1s ease;
+      opacity: 0; /* Default hidden */
     }
-
-    #bg-day { opacity: 1; }
-    #bg-night { opacity: 0; }
-    #bg-alt { opacity: 0; }
+    
+    /* Active classes for video transitions */
+    .bg-video.active { opacity: 1; }
 
     #video-overlay {
       position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0,0,0,0.3);
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0,0,0,0.6);
       z-index: -1;
     }
 
+    /* --- LAYOUT & TYPOGRAPHY --- */
     .wrap {
       display: flex;
       flex-direction: column;
-      gap: 0.0rem;
       align-items: center;
       justify-content: center;
       padding: 2rem;
@@ -72,108 +71,96 @@
     }
 
     .smalltitle {
-      font-family: 'GT-Walsheim-Pro-Bold', sans-serif;
       font-size: clamp(20px, 3vw, 28px);
       opacity: 0.8;
+      margin-bottom: 0;
     }
 
-    .clock { font-size: clamp(80px,14vw,400px); font-weight: 800; margin-top: 0.0rem; }
+    .clock {
+      font-size: clamp(80px, 14vw, 400px);
+      font-weight: 800;
+      line-height: 1;
+    }
 
     .message {
-      font-family: 'GT-Walsheim-Pro-Bold', sans-serif;
-      font-size: clamp(20px,3vw,42px);
+      font-size: clamp(20px, 3vw, 42px);
       font-weight: 600;
       transition: opacity 1s ease;
-      opacity: 1;
+      min-height: 1.2em; /* Voorkomt verspringen */
     }
 
     #xmas-countdown {
-      font-family: 'GT-Walsheim-Pro-Bold', sans-serif;
-      font-size: clamp(12px,1.8vw,20px);
-      margin-top: 0.8rem;
-      opacity: 0.50;
+      font-size: clamp(12px, 1.8vw, 20px);
+      margin-top: 1rem;
+      opacity: 0.5;
       font-weight: 400;
-    }
-
-    #counter {
-      font-family: 'GT-Walsheim-Pro-Bold', sans-serif;
-      font-size: clamp(18px,2.4vw,28px);
-      position: absolute;
-      bottom: 1.8rem;
-      width: 100%;
-      animation: ticker 60s linear infinite;
-      white-space: nowrap;
-      left: 100%;
-    }
-
-    @keyframes ticker {
-      0% { transform: translateX(0); }
-      100% { transform: translateX(-200%); }
     }
 
     .logo {
       position: absolute;
-      top: 20px;
-      right: 30px;
+      top: 20px; right: 30px;
       max-width: 300px;
-      opacity: .9;
-      transition: opacity .3s ease;
-      z-index: 1;
-    }
-    .logo:hover { opacity: 1 }
-
-    #gif-1629 {
-      position: fixed;
-      bottom: 0;
-      left: 0;
-      width: 100%;
+      opacity: 0.9;
+      transition: opacity 0.3s ease;
       z-index: 10;
-      display: none;
-      pointer-events: none;
+    }
+    .logo:hover { opacity: 1; }
+
+    /* --- TICKER ANIMATION (FIXED) --- */
+    #counter {
+      font-size: clamp(18px, 2.4vw, 28px);
+      position: absolute;
+      bottom: 1.8rem;
+      width: auto;
+      white-space: nowrap;
+      left: 100%; /* Start buiten beeld rechts */
+      animation: ticker 60s linear infinite;
+      will-change: transform;
+    }
+
+    @keyframes ticker {
+      0% { transform: translate3d(0, 0, 0); }
+      100% { transform: translate3d(calc(-100vw - 100%), 0, 0); }
     }
   </style>
 </head>
 <body>
 
-  <!-- Preload background video's -->
   <video autoplay muted loop id="bg-day" class="bg-video">
     <source src="background_day.mp4" type="video/mp4">
   </video>
-
   <video autoplay muted loop id="bg-night" class="bg-video">
     <source src="background_night.mp4" type="video/mp4">
   </video>
-
   <video autoplay muted loop id="bg-alt" class="bg-video">
     <source src="background_alt.mp4" type="video/mp4">
   </video>
 
   <div id="video-overlay"></div>
   <img src="HHS_grijs_fc copy.png" alt="Logo" class="logo" />
-  <img id="gif-1629" src="homer.gif" />
 
   <div class="wrap">
-    <div id="title" class="smalltitle">
-      De tijd in de Frontoffice FZ&IT Backoffice is nu:
-    </div>
+    <div id="title" class="smalltitle">Laden...</div>
     <div id="clock" class="clock">--:--</div>
     <div id="message" class="message">...</div>
     <div id="xmas-countdown"></div>
   </div>
+
   <div id="counter">Welkom bij Frontoffice FZ&IT!</div>
 
   <script>
-    const two = n => String(n).padStart(2, '0');
+    // --- CONFIGURATIE ---
+    const CONFIG = {
+      days: ["zondag","maandag","dinsdag","woensdag","donderdag","vrijdag","zaterdag"],
+      months: ["januari","februari","maart","april","mei","juni","juli","augustus","september","oktober","november","december"],
+      shifts: {
+        weekday: { start: 8, end: 19.5 }, // 19:30 = 19.5
+        friday:  { start: 8, end: 17 },
+        preShiftMinutes: 15 // 07:45 tot 08:00
+      }
+    };
 
-    function setDateInTitle() {
-      const title = document.getElementById('title');
-      const now = new Date();
-      const dagen = ["zondag","maandag","dinsdag","woensdag","donderdag","vrijdag","zaterdag"];
-      const maanden = ["januari","februari","maart","april","mei","juni","juli","augustus","september","oktober","november","december"];
-      title.textContent =
-        `Het is ${dagen[now.getDay()]} ${now.getDate()} ${maanden[now.getMonth()]} ${now.getFullYear()} en de tijd bij Frontoffice FZ&IT is nu:`;
-    }
-
+    // Quotes voor specifieke tijdstippen
     const workQuotes = {
       "08:00": "De dag is begonnen. Wat een ellende. Of toch niet 👀",
       "08:30": "De half negen dienst is binnen (hopen we dan). Tijd om echt te knallen!",
@@ -199,258 +186,221 @@
       "19:30": "Vrijheid! 🎉"
     };
 
+    // Ticker teksten
+    const tickerTexts = {
+      outside: [
+        "✨ Het is buiten werktijd. Dit systeem mist je al, maar jij hoeft er niet te zijn ✨",
+        "✨ Buiten de shift en tóch hier? Dapper. Maar ga leven ✨",
+        "✨ Geen dienst, geen stress, geen tickets. Vrijheid ✨",
+        "✨ Je bent off-duty. Zelfs Directory Manager zou dit begrijpen ✨",
+        "✨ Dit is geen werkmoment. Dit is een ‘sluit je laptop’-moment ✨",
+        "✨ De Frontoffice slaapt. Jij zou dat ook moeten doen ✨",
+        "✨ Buiten werktijd. De systemen wachten wel. Jij niet ✨"
+      ],
+      motivation: [
+        "Het is weer begonnen, die werkdag. Het is niet anders, dus we gaan het gewoon doen",
+        "Jij draait als een oude follow me printer. Piepend, maar functioneel",
+        "Je houdt het vol, al voelt het alsof je in een kamer zonder verwarming zit. Wat half waar is",
+        "Je zit in een prima flow. Niet geweldig, niet slecht, gewoon... werk",
+        "Systemen crashen? Jij niet. Jij bent de laatste Directory Manager die overeind blijft",
+        "Je hebt de vibe van iemand die Azure AD met één hand kan fixen",
+        "Je bent officieel boven verwachting aan het functioneren, al staat het nergens",
+        "De energie komt op gang. Je bent basically een menselijke OpenIDM-sync",
+        "Je gaat harder dan Ozan die een teamuitje planned",
+        "Dit begint op iets indrukwekkends te lijken. De backoffice voelt je aanwezigheid",
+        "Halverwege en je straalt als een monitor in het donker",
+        "Je hebt meer momentum dan de mensen in Poseidon",
+        "Je dendert door processen als een incident waar geen kennisitem voor bestaat",
+        "Je workflow is smoother dan een havercappu van Stacey",
+        "De eindtijd voelt ineens realistisch. Tijd? Tijd is een illusie. Jij niet",
+        "Je bent on fire. Als iemand nu belt met: Mijn wachtwoord werkt niet... you got this",
+        "Je bent basically de Functioneel Beheerder Onstage van deze werkdag.",
+        "Je houdt de boel bij elkaar als duct tape in een serverruimte",
+        "Je bent sneller dan het moment dat DM eindelijk werd uitgefaseerd",
+        "Ruik je die finish al? Hij ruikt naar vrijheid en een warme jas",
+        "Laatste fase. Je gaat als een tierelier. De tijd is bang voor jou",
+        "Nog héél even en je ontsnapt uit deze digitale jungle als een ware ontsnappingskunstenaar",
+        "JIJ. BENT. EEN. LEGENDE. De eindtijd buigt voor je. Het universum applaudisseert"
+      ],
+      moods: ["mooie", "vreselijke", "matige", "neutrale", "prima", "fantastische", "mooie"]
+    };
+
+    // --- STATE VARIABLES ---
     let lastQuoteKey = "";
+    let lastOutsideBlock = -1;
+    let cachedOutsideMessage = "";
 
-    function setQuoteWithFade(newText) {
-      const msg = document.getElementById('message');
-      msg.style.opacity = 0;
-      setTimeout(() => {
-        msg.textContent = newText;
-        msg.style.opacity = 1;
-      }, 500);
+    // --- HELPERS ---
+    const two = n => String(n).padStart(2, '0');
+
+    // --- MAIN FUNCTIONS ---
+
+    function setDateTitle(now) {
+      const dateStr = `Het is ${CONFIG.days[now.getDay()]} ${now.getDate()} ${CONFIG.months[now.getMonth()]} ${now.getFullYear()} en de tijd bij Frontoffice FZ&IT is nu:`;
+      document.getElementById('title').textContent = dateStr;
     }
 
-   function updateChristmasCountdown() {
-    const countdown = document.getElementById('xmas-countdown');
-    const now = new Date();
-    const year = now.getFullYear();
-
-    // Laatste vrijdag vóór 25 december om 17:00
-    let target = new Date(year, 11, 24, 17, 0, 0); // 24 dec 17:00
-    while (target.getDay() !== 5) { // 5 = vrijdag
-        target.setDate(target.getDate() - 1);
-    }
-
-    // Als kerstvakantie al voorbij is → volgend jaar
-    if (now >= target) {
-        target = new Date(year + 1, 11, 24, 17, 0, 0);
-        while (target.getDay() !== 5) {
-            target.setDate(target.getDate() - 1);
-        }
-    }
-
-    const diffMs = target - now;
-
-    if (diffMs <= 0) {
-        countdown.textContent = `Kerstvakantie ${target.getFullYear()}! 🎄✨ Geniet ervan!`;
-        return;
-    }
-
-    const totalMinutes = Math.floor(diffMs / (1000 * 60));
-    const totalHours = Math.floor(diffMs / (1000 * 60 * 60));
-    const days = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
-    const hours = totalHours % 24;
-    const minutes = totalMinutes % 60;
-
-    if (days > 1) {
-        countdown.textContent = `Nog ${days} dagen tot de kerstvakantie van ${target.getFullYear()} 🎄`;
-    } else if (hours > 0) {
-        countdown.textContent = `Nog ${hours} uur tot de kerstvakantie van ${target.getFullYear()} 🎄`;
-    } else {
-        countdown.textContent = `Nog ${minutes} minuten tot de kerstvakantie van ${target.getFullYear()} 🎉`;
-    }
-}
-
-
-
-
-    function updateQuote() {
-      const now = new Date();
-      const h = two(now.getHours());
-      const m = two(now.getMinutes());
+    function updateQuote(h, m) {
       const timeKey = `${h}:${m}`;
       let quote = workQuotes[timeKey];
+      
+      // Fallback naar half uur afronding als er geen exacte match is
       if (!quote) {
         const rounded = `${h}:${m < 30 ? "00" : "30"}`;
         quote = workQuotes[rounded] || "";
       }
+
       if (timeKey !== lastQuoteKey) {
-        setQuoteWithFade(quote || "Momenteel is de Frontoffice FZ&IT gesloten.");
+        const msgEl = document.getElementById('message');
+        const textToShow = quote || "Momenteel is de Frontoffice FZ&IT gesloten.";
+        
+        msgEl.style.opacity = 0;
+        setTimeout(() => {
+          msgEl.textContent = textToShow;
+          msgEl.style.opacity = 1;
+        }, 500);
         lastQuoteKey = timeKey;
       }
     }
 
-    function updateBackgroundVideo() {
-      const now = new Date();
+    function updateBackground(now) {
       const day = now.getDay();
-      const minutes = now.getHours() * 60 + now.getMinutes();
-
+      const totalMins = now.getHours() * 60 + now.getMinutes();
+      
       const vidDay = document.getElementById("bg-day");
       const vidNight = document.getElementById("bg-night");
       const vidAlt = document.getElementById("bg-alt");
 
-      if (day >= 1 && day <= 5 && minutes === 16*60 + 29) {
-        vidDay.style.opacity = 0; vidNight.style.opacity = 0; vidAlt.style.opacity = 1; return;
-      }
-      if (day >= 1 && day <= 5 && minutes === 16*60 + 30) {
-        vidDay.style.opacity = 1; vidNight.style.opacity = 0; vidAlt.style.opacity = 0; return;
+      // Reset all classes
+      vidDay.classList.remove('active');
+      vidNight.classList.remove('active');
+      vidAlt.classList.remove('active');
+
+      // 1. Speciale "Friday 16:29" video
+      if (day >= 1 && day <= 5 && totalMins === 16*60 + 29) {
+        vidAlt.classList.add('active');
+        return;
       }
 
+      // 2. Bepaal of het 'dag' is (tussen 08:00 en 19:30 ma-do, of tot 17:00 vr)
       let isDay = false;
-      if (day >= 1 && day <= 4) {
-        if ((minutes >= 8*60 && minutes <= 16*60+29) || (minutes >= 16*60+30 && minutes <= 19*60+30)) isDay = true;
-      } else if (day === 5) {
-        if ((minutes >= 8*60 && minutes <= 16*60+29) || (minutes >= 16*60+30 && minutes <= 17*60)) isDay = true;
+      if (day >= 1 && day <= 4) { // Ma-Do
+        if ((totalMins >= 8*60 && totalMins < 19*60+30)) isDay = true;
+      } else if (day === 5) { // Vrijdag
+        if ((totalMins >= 8*60 && totalMins < 17*60)) isDay = true;
       }
 
-      if (isDay) { vidDay.style.opacity = 1; vidNight.style.opacity = 0; vidAlt.style.opacity = 0; }
-      else { vidDay.style.opacity = 0; vidNight.style.opacity = 1; vidAlt.style.opacity = 0; }
+      // 3. Zet juiste video aan
+      if (isDay) vidDay.classList.add('active');
+      else vidNight.classList.add('active');
     }
 
-    // Globale variabelen
-    let lastOutsideMinute = null;
-    let cachedOutsideMessage = "";
+    function updateXmasCountdown(now) {
+      const el = document.getElementById('xmas-countdown');
+      let targetYear = now.getFullYear();
+      let target = new Date(targetYear, 11, 24, 17, 0, 0); // 24 Dec 17:00
 
- function updateClockAndCounter() {  
-  const now = new Date();
-  const h = two(now.getHours());
-  const m = two(now.getMinutes());
-  const dayNumber = now.getDay();
-  const dagen = ["zondag","maandag","dinsdag","woensdag","donderdag","vrijdag","zaterdag"];
-  const dayName = dagen[dayNumber];
+      // Zoek laatste vrijdag voor kerst
+      while (target.getDay() !== 5) target.setDate(target.getDate() - 1);
 
-  document.getElementById('clock').textContent = `${h}:${m}`;
+      // Als al voorbij, pak volgend jaar
+      if (now >= target) {
+        target = new Date(targetYear + 1, 11, 24, 17, 0, 0);
+        while (target.getDay() !== 5) target.setDate(target.getDate() - 1);
+      }
 
-  // -------------------------------
-  //  SHIFT-TIJDEN
-  // -------------------------------
-  let shiftStart, shiftEnd;
+      const diff = target - now;
+      if (diff <= 0) {
+        el.textContent = `Kerstvakantie ${target.getFullYear()}! 🎄✨ Geniet ervan!`;
+        return;
+      }
 
-  if (dayNumber >= 1 && dayNumber <= 4) {
-    // maandag t/m donderdag
-    shiftStart = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 8, 0, 0);
-    shiftEnd   = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 19, 30, 0);
-  } else if (dayNumber === 5) {
-    // vrijdag
-    shiftStart = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 8, 0, 0);
-    shiftEnd   = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 17, 0, 0);
-  } else {
-    // weekend
-    document.getElementById('counter').textContent =
-      `✨ Bro, het is ${dayName}. Er is geen werk vandaag. Ga naar huis. Vier weekend ✨`;
-    return;
-  }
+      const days = Math.ceil(diff / (1000 * 60 * 60 * 24));
+      const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
+      const mins = Math.floor((diff / (1000 * 60)) % 60);
 
-  // -------------------------------
-  // PRE-SHIFT COUNTDOWN 07:45–08:00
-  // -------------------------------
-  const preOpenStart = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 7, 45, 0);
-  const preOpenEnd   = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 8, 0, 0);
-
-  if (now >= preOpenStart && now < preOpenEnd) {
-    const minutesUntilOpen = Math.ceil((preOpenEnd - now) / 60000);
-    const minuteWord = minutesUntilOpen === 1 ? "minuut" : "minuten";
-
-    document.getElementById('counter').textContent =
-      `De Frontoffice opent over ${minutesUntilOpen} ${minuteWord}. Bereid je mentaal voor 😭`;
-    return;
-  }
-
-  // -------------------------------
-  // BUITEN SHIFT → WISSEL ELKE 5 MINUTEN
-  // -------------------------------
-  if (now < shiftStart || now > shiftEnd) {
-
-    const outsideShiftMessages = [
-      "✨ Het is buiten werktijd. Dit systeem mist je al, maar jij hoeft er niet te zijn ✨",
-      "✨ Buiten de shift en tóch hier? Dapper. Maar ga leven ✨",
-      "✨ Geen dienst, geen stress, geen tickets. Vrijheid ✨",
-      "✨ Je bent off-duty. Zelfs Directory Manager zou dit begrijpen ✨",
-      "✨ Dit is geen werkmoment. Dit is een ‘sluit je laptop’-moment ✨",
-      "✨ De Frontoffice slaapt. Jij zou dat ook moeten doen ✨",
-      "✨ Buiten werktijd. De systemen wachten wel. Jij niet ✨"
-    ];
-
-    // Bepaal het huidige 5-minutenblok (0–11 per uur)
-    const fiveMinuteBlock = Math.floor(now.getMinutes() / 5);
-
-    if (fiveMinuteBlock !== lastOutsideBlock) {
-      lastOutsideBlock = fiveMinuteBlock;
-
-      // Zorgt voor nette rotatie door de lijst
-      const messageIndex =
-        (Math.floor(now.getTime() / (5 * 60 * 1000))) % outsideShiftMessages.length;
-
-      cachedOutsideMessage = outsideShiftMessages[messageIndex];
+      if (days > 1) el.textContent = `Nog ${days} dagen tot de kerstvakantie van ${target.getFullYear()} 🎄`;
+      else if (hours > 0) el.textContent = `Nog ${hours} uur tot de kerstvakantie van ${target.getFullYear()} 🎄`;
+      else el.textContent = `Nog ${mins} minuten tot de kerstvakantie van ${target.getFullYear()} 🎉`;
     }
 
-    document.getElementById('counter').textContent = cachedOutsideMessage;
-    return;
-  }
+    function updateTicker(now) {
+      const counterEl = document.getElementById('counter');
+      const day = now.getDay();
+      
+      // Weekend Check
+      if (day === 0 || day === 6) {
+        counterEl.textContent = `✨ Bro, het is ${CONFIG.days[day]}. Er is geen werk vandaag. Ga naar huis. Vier weekend ✨`;
+        return;
+      }
 
-  // -------------------------------
-  // BINNEN SHIFT
-  // -------------------------------
-  const minutesLeft = Math.ceil((shiftEnd - now) / 60000);
+      // Bepaal shift tijden voor vandaag
+      const isFriday = day === 5;
+      const startH = CONFIG.shifts.weekday.start;
+      const endH = isFriday ? CONFIG.shifts.friday.end : CONFIG.shifts.weekday.end;
+      
+      const shiftStart = new Date(now); shiftStart.setHours(startH, 0, 0, 0);
+      const shiftEnd = new Date(now); 
+      // Correctie voor halve uren (19.5 = 19:30)
+      shiftEnd.setHours(Math.floor(endH), (endH % 1) * 60, 0, 0);
 
-  const messages = [
-    "Het is weer begonnen, die werkdag. Het is niet anders, dus we gaan het gewoon doen",
-    "Jij draait als een oude follow me printer. Piepend, maar functioneel",
-    "Je houdt het vol, al voelt het alsof je in een kamer zonder verwarming zit. Wat half waar is",
-    "Je zit in een prima flow. Niet geweldig, niet slecht, gewoon... werk",
-    "Systemen crashen? Jij niet. Jij bent de laatste Directory Manager die overeind blijft",
-    "Je hebt de vibe van iemand die Azure AD met één hand kan fixen",
-    "Je bent officieel boven verwachting aan het functioneren, al staat het nergens",
-    "De energie komt op gang. Je bent basically een menselijke OpenIDM-sync",
-    "Je gaat harder dan Ozan die een teamuitje planned",
-    "Dit begint op iets indrukwekkends te lijken. De backoffice voelt je aanwezigheid",
-    "Halverwege en je straalt als een monitor in het donker",
-    "Je hebt meer momentum dan de mensen in Poseidon",
-    "Je dendert door processen als een incident waar geen kennisitem voor bestaat",
-    "Je workflow is smoother dan een havercappu van Stacey",
-    "De eindtijd voelt ineens realistisch. Tijd? Tijd is een illusie. Jij niet",
-    "Je bent on fire. Als iemand nu belt met: Mijn wachtwoord werkt niet... you got this",
-    "Je bent basically de Functioneel Beheerder Onstage van deze werkdag.",
-    "Je houdt de boel bij elkaar als duct tape in een serverruimte",
-    "Je bent sneller dan het moment dat DM eindelijk werd uitgefaseerd",
-    "Ruik je die finish al? Hij ruikt naar vrijheid en een warme jas",
-    "Laatste fase. Je gaat als een tierelier. De tijd is bang voor jou",
-    "Nog héél even en je ontsnapt uit deze digitale jungle als een ware ontsnappingskunstenaar",
-    "JIJ. BENT. EEN. LEGENDE. De eindtijd buigt voor je. Het universum applaudisseert"
-  ];
+      const preStart = new Date(shiftStart);
+      preStart.setMinutes(shiftStart.getMinutes() - CONFIG.shifts.preShiftMinutes);
 
-  const bucketSize = 30;
-  const totalMinutes = (shiftEnd - shiftStart) / 60000;
-  const totalBuckets = messages.length;
+      // 1. Pre-Shift (07:45 - 08:00)
+      if (now >= preStart && now < shiftStart) {
+        const minsToOpen = Math.ceil((shiftStart - now) / 60000);
+        counterEl.textContent = `De Frontoffice opent over ${minsToOpen} ${minsToOpen === 1 ? 'minuut' : 'minuten'}. Bereid je mentaal voor 😭`;
+        return;
+      }
 
-  const bucketIndex = Math.min(
-    totalBuckets - 1,
-    Math.floor((totalMinutes - minutesLeft) / bucketSize)
-  );
+      // 2. Buiten Shift
+      if (now < shiftStart || now > shiftEnd) {
+        const currentBlock = Math.floor(now.getMinutes() / 5);
+        if (currentBlock !== lastOutsideBlock) {
+          lastOutsideBlock = currentBlock;
+          const idx = Math.floor(now.getTime() / 300000) % tickerTexts.outside.length; // elke 5 min
+          cachedOutsideMessage = tickerTexts.outside[idx];
+        }
+        counterEl.textContent = cachedOutsideMessage;
+        return;
+      }
 
-  const motivationMessage = messages[bucketIndex];
+      // 3. Binnen Shift (Motivatie)
+      const minsLeft = Math.ceil((shiftEnd - now) / 60000);
+      const totalShiftMins = (shiftEnd - shiftStart) / 60000;
+      
+      // Bereken welk bericht (bucket logic)
+      const bucketSize = 30; // elke 30 min een nieuwe 'vibe'
+      const bucketIdx = Math.min(
+        tickerTexts.motivation.length - 1,
+        Math.floor((totalShiftMins - minsLeft) / bucketSize)
+      );
 
-  const dayMoodWords = [
-    "mooie",
-    "vreselijke",
-    "matige",
-    "neutrale",
-    "prima",
-    "fantastische",
-    "mooie"
-  ];
+      const mood = tickerTexts.moods[day] || "";
+      counterEl.textContent = `✨ Welkom bij Frontoffice FZ&IT ✨ Succes met je dienst op deze ${mood} ${CONFIG.days[day]} 
+      ✨ Er zijn nog ${minsLeft} minuten te gaan tot het einde van de shift ✨ ${tickerTexts.motivation[bucketIdx]} ✨`;
+    }
 
-  const moodWord = dayMoodWords[dayNumber] || "";
+    // --- MASTER LOOP ---
+    function tick() {
+      const now = new Date();
+      const h = two(now.getHours());
+      const m = two(now.getMinutes());
 
-  document.getElementById('counter').textContent =
-    `✨ Welkom bij Frontoffice FZ&IT ✨ Succes met je dienst op deze ${moodWord} ${dayName} ` +
-    `✨ Er zijn nog ${minutesLeft} minuten te gaan tot het einde van de shift ✨ ${motivationMessage} ✨`;
-}
+      document.getElementById('clock').textContent = `${h}:${m}`;
+      
+      setDateTitle(now);
+      updateQuote(h, m);
+      updateBackground(now);
+      updateXmasCountdown(now);
+      updateTicker(now);
+    }
 
-    /* INIT + INTERVAL */
-    updateClockAndCounter();
-    updateQuote();
-    updateChristmasCountdown();
-    updateBackgroundVideo();
-    setDateInTitle();
+    // Start
+    tick();
+    setInterval(tick, 1000);
 
-    setInterval(() => {
-      updateClockAndCounter();
-      updateQuote();
-      updateChristmasCountdown();
-      updateBackgroundVideo();
-      setDateInTitle();
-    }, 1000);
   </script>
 </body>
 </html>
