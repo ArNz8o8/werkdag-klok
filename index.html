@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Frontoffice Klok — Clean Countdown v6.7</title>
-  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet">
   
   <style>
     @font-face {
@@ -128,14 +128,44 @@
 
     .clock-label { font-size: 18px; margin-bottom: 1rem; opacity: 0.8; text-transform: uppercase; }
 
-    .clock {
-      font-family: 'Roboto', sans-serif;
-      font-size: clamp(100px, 18vw, 280px); 
-      font-weight: 800; line-height: 0.9; margin: 0;
-      background: linear-gradient(to bottom, #ffffff 30%, #a8a8a8 100%);
-      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-      font-variant-numeric: tabular-nums; 
-    }
+.clock {
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  font-size: clamp(100px, 16vw, 240px); 
+  font-weight: 900; 
+  line-height: 1; 
+  margin: 0;
+  font-variant-numeric: tabular-nums;
+  
+  background: linear-gradient(
+    45deg, 
+    #ffffff 10%, 
+    #ffffff 25%, 
+    rgba(158, 167, 0, 0.6) 50%, 
+    #ffffff 75%, 
+    #ffffff 90%
+  );
+  
+  background-size: 600% auto; 
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  
+  animation: shine 45s linear infinite;
+}
+
+@keyframes shine {
+  0% { background-position: 300% center; }
+  100% { background-position: -300% center; }
+}
+
+@keyframes shine-right {
+  0% { background-position: 150% center; }
+  100% { background-position: -150% center; }
+}
+
+@keyframes shine-left {
+  0% { background-position: -150% center; }
+  100% { background-position: 150% center; }
+}
 
     .message {
       font-size: clamp(18px, 2.5vw, 24px);
@@ -371,13 +401,20 @@
       const diff = target - now;
       const d = Math.floor(diff / (1000 * 60 * 60 * 24));
       const h = Math.floor((diff / (1000 * 60 * 60)) % 24);
-      const m = Math.floor((diff / 1000 / 60) % 60);
 
       els.cdLabel.textContent = isWeekendCountdown ? "Het weekend begint over" : "Werken begint weer over";
       
       let displayStr = "";
-      if (d > 0) displayStr += `${d} dagen en `;
-      displayStr += `${h} uur`;
+      
+      // Logica voor dagen
+      if (d > 0) {
+          const dagLabel = (d === 1) ? "dag" : "dagen";
+          displayStr += `${d} ${dagLabel} en `;
+      }
+      
+      // Logica voor uren
+      const uurLabel = (h === 1) ? "uur" : "uren";
+      displayStr += `${h} ${uurLabel}`;
       
       els.cdTime.textContent = displayStr;
     }
@@ -422,7 +459,7 @@
       }
     }
 
-    function tick() {
+function tick() {
       const now = new Date();
       els.clock.textContent = `${two(now.getHours())}:${two(now.getMinutes())}`;
       els.date.textContent = `${CONFIG.days[now.getDay()]} ${now.getDate()} ${CONFIG.months[now.getMonth()]} ${now.getFullYear()}`;
@@ -439,23 +476,31 @@
           const displayMins = Math.floor(totalSecondsUntilEight / 60);
           const displaySecs = totalSecondsUntilEight % 60;
           tickerText = `⚠️ ATTENTIE: De werkdag begint over precies ${displayMins} minuten en ${displaySecs} seconden ⚠️`;
-      } 
-      else if (isOpen) {
+          
+          // Optioneel: tijdens het aftellen naar de start kun je het weer wel of niet tonen. 
+          // Hier staat het nu uit voor een strakke focus op de tijd.
+          nextTickerContent = tickerText; 
+
+      } else if (isOpen) {
           const isFriday = now.getDay() === 5;
           const endH = isFriday ? 17 : 19.5;
           const shiftEnd = new Date(now); shiftEnd.setHours(Math.floor(endH), (endH % 1) * 60, 0, 0);
           const minsLeft = Math.ceil((shiftEnd - now) / 60000);
           const motivationIdx = (now.getHours() + now.getDay()) % tickerTexts.motivation.length; 
+          
           tickerText = `✨ Welkom bij Frontoffice FZ&IT ✨ Nog ${minsLeft} minuten tot einde shift op deze ${tickerTexts.moods[now.getDay()]} ${CONFIG.days[now.getDay()]} ✨ ${tickerTexts.motivation[motivationIdx]}`;
+          
+          // Binnen werktijd: Voeg het weer toe
+          nextTickerContent = `${tickerText} ✨ ${weatherString}`;
+
       } else {
           const outsideIdx = now.getMinutes() % tickerTexts.outside.length;
           tickerText = tickerTexts.outside[outsideIdx];
+          
+          // Buiten werktijd: Alleen de tekst, geen weerbericht
+          nextTickerContent = tickerText;
       }
 
-      // Buffer voor ticker
-      nextTickerContent = `${tickerText} ✨ ${weatherString}`;
-
-      // Bij de eerste keer laden (of als het leeg is) dan wel vullen
       if (els.counter.textContent === "Systeem wordt geïnitialiseerd...") {
         els.counter.textContent = nextTickerContent;
       }
