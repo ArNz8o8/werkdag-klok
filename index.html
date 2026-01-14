@@ -175,14 +175,15 @@
     }
 
     .card-countdown {
-      margin-top: 1rem;
-      padding-top: 1.5rem;
-      border-top: 1px solid rgba(255,255,255,0.1);
-      width: 100%;
-      font-size: 1.3rem;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-    }
+  display: none; /* Standaard verbergen */
+  margin-top: 1rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid rgba(255,255,255,0.1);
+  width: 100%;
+  font-size: 1.3rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
 
     .highlight { color: #9ea700; font-weight: bold; margin-left: 8px; }
 
@@ -382,6 +383,17 @@
     }
 
     function updateCountdown(now) {
+      const isOpen = checkIsOpen(now);
+      const countdownContainer = document.querySelector('.card-countdown');
+
+      // Toon de countdown alleen als de frontoffice open is
+      if (!isOpen) {
+          countdownContainer.style.display = 'none';
+          return; // Stop de rest van de functie
+      } else {
+          countdownContainer.style.display = 'block';
+      }
+
       const day = now.getDay();
       let target = new Date(now);
       let isWeekendCountdown = true;
@@ -406,13 +418,11 @@
       
       let displayStr = "";
       
-      // Logica voor dagen
       if (d > 0) {
           const dagLabel = (d === 1) ? "dag" : "dagen";
           displayStr += `${d} ${dagLabel} en `;
       }
       
-      // Logica voor uren
       const uurLabel = (h === 1) ? "uur" : "uren";
       displayStr += `${h} ${uurLabel}`;
       
@@ -476,9 +486,7 @@ function tick() {
           const displayMins = Math.floor(totalSecondsUntilEight / 60);
           const displaySecs = totalSecondsUntilEight % 60;
           tickerText = `⚠️ ATTENTIE: De werkdag begint over precies ${displayMins} minuten en ${displaySecs} seconden ⚠️`;
-          
-          // Optioneel: tijdens het aftellen naar de start kun je het weer wel of niet tonen. 
-          // Hier staat het nu uit voor een strakke focus op de tijd.
+      
           nextTickerContent = tickerText; 
 
       } else if (isOpen) {
@@ -506,7 +514,6 @@ function tick() {
       }
     }
 
-    // EVENT LISTENER: Alleen updaten als de animatie klaar is met een rondje
     els.counter.addEventListener('animationiteration', () => {
       els.counter.textContent = nextTickerContent;
     });
