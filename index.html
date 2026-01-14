@@ -1,166 +1,243 @@
 <!doctype html>
-<!--
-  =============================================================
-   Backoffice Klok — gemaakt door Arnold den Hartog
-   Afdeling: Frontoffice FZ&IT / KICK
-   Versie: 3.0 — Video, ticker en alles compleet
-  =============================================================
--->
 <html lang="nl">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Klok — Werkdag Teller</title>
+  <title>Frontoffice Klok — Clean Countdown v6.7</title>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@800&display=swap" rel="stylesheet">
+  
   <style>
-    /* --- FONTS --- */
     @font-face {
       font-family: 'GT-Walsheim-Pro-Bold';
       src: url('GT-Walsheim-Pro-Bold.otf') format('opentype');
       font-weight: bold;
     }
 
-    /* --- BASE STYLES --- */
-    :root { color-scheme: dark; }
-    html, body { height: 100%; margin: 0; }
+    :root {
+      --glass-bg: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.01) 100%);
+      --glass-border: 1px solid rgba(255, 255, 255, 0.15);
+      --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3), inset 0 0 0 1px rgba(255, 255, 255, 0.05);
+      --glass-filter: blur(8px) saturate(120%); 
+    }
+
+    * { box-sizing: border-box; }
     
-    body {
-      font-family: 'GT-Walsheim-Pro-Bold', system-ui, -apple-system, sans-serif;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      text-align: center;
-      overflow: hidden;
+    html, body { 
+      height: 100%; 
+      margin: 0; 
+      background-color: #0f172a; 
       color: #fff;
-      background-color: #000; /* Fallback */
+      font-family: 'GT-Walsheim-Pro-Bold', system-ui, -apple-system, sans-serif;
+      overflow: hidden;
     }
 
-    /* --- BACKGROUND VIDEO --- */
-    .bg-video {
+    .bg-container {
       position: fixed;
       top: 0; left: 0;
       width: 100%; height: 100%;
-      object-fit: cover;
-      z-index: -2;
-      transition: opacity 1s ease;
-      opacity: 0; /* Default hidden */
-    }
-    
-    /* Active classes for video transitions */
-    .bg-video.active { opacity: 1; }
-
-    #video-overlay {
-      position: fixed;
-      top: 0; left: 0;
-      width: 100%; height: 100%;
-      background: rgba(0,0,0,0.6);
-      z-index: -1;
+      z-index: 0;
+      background: #0f172a; 
+      overflow: hidden;
     }
 
-    /* --- LAYOUT & TYPOGRAPHY --- */
-    .wrap {
+    .orb {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(60px); 
+      opacity: 0.6;
+      animation-timing-function: ease-in-out;
+      animation-iteration-count: infinite;
+      animation-direction: alternate;
+      will-change: transform, opacity;
+      transition: background-color 3s ease, filter 2s ease;
+    }
+
+    .orb1 { top: -10%; left: -5%; width: 22vw; height: 22vw; animation-name: float1; animation-duration: 43s; }
+    .orb2 { bottom: -5%; right: 5%; width: 25vw; height: 25vw; animation-name: float2; animation-duration: 37s; }
+    .orb3 { top: 20%; right: 25%; width: 18vw; height: 18vw; animation-name: float3; animation-duration: 51s; opacity: 0.4; }
+    .orb4 { bottom: 15%; left: 10%; width: 15vw; height: 15vw; animation-name: float1; animation-duration: 35s; opacity: 0.3; }
+    .orb5 { top: 45%; left: 40%; width: 12vw; height: 12vw; animation-name: float2; animation-duration: 41s; opacity: 0.35; }
+
+    @keyframes pulse-fast {
+      0% { transform: scale(1); opacity: 0.5; filter: blur(60px); }
+      50% { transform: scale(1.4); opacity: 0.9; filter: blur(30px); }
+      100% { transform: scale(1); opacity: 0.5; filter: blur(60px); }
+    }
+    .special-active { animation: pulse-fast 1.5s infinite ease-in-out !important; }
+
+    @keyframes float1 { 0% { transform: translate(0, 0); } 50% { transform: translate(10vw, 15vh); } 100% { transform: translate(-5vw, 5vh); } }
+    @keyframes float2 { 0% { transform: translate(0, 0); } 50% { transform: translate(-10vw, -10vh); } 100% { transform: translate(5vw, -15vh); } }
+    @keyframes float3 { 0% { transform: translate(0, 0); } 100% { transform: translate(-20vw, 20vh); } }
+
+    .container {
+      height: 100vh;
+      display: grid;
+      grid-template-rows: 100px 1fr 120px;
+      padding: 2rem;
+      z-index: 1;
+      position: relative;
+    }
+
+    header { display: flex; justify-content: space-between; align-items: flex-start; }
+
+    .brand-title {
+      display: flex; gap: 12px;
+      font-size: clamp(20px, 1.8vw, 28px);
+      text-transform: uppercase; font-weight: 800; letter-spacing: 1px;
+    }
+    .brand-frontoffice { color: #ffffff; }
+    .brand-fzit { color: #9ea700; }
+
+    .logo { height: 60px; filter: drop-shadow(0 0 10px rgba(255,255,255,0.2)); }
+
+    main {
+      display: flex; flex-direction: column;
+      justify-content: center; align-items: center; text-align: center;
+    }
+
+    .info-block {
+      background: var(--glass-bg);
+      backdrop-filter: var(--glass-filter);
+      -webkit-backdrop-filter: var(--glass-filter);
+      padding: 0.6rem 2.5rem;
+      border-radius: 12px;
+      border: var(--glass-border);
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      box-shadow: var(--glass-shadow);
+    }
+
+    .date-display { font-size: 1.3rem; margin-bottom: 2rem; }
+
+    .clock-card {
+      background: var(--glass-bg);
+      backdrop-filter: blur(12px) saturate(160%); 
+      -webkit-backdrop-filter: blur(12px) saturate(160%);
+      padding: 3rem 5rem;
+      border-radius: 40px;
+      border: var(--glass-border);
+      box-shadow: 0 25px 60px rgba(0,0,0,0.5), inset 0 0 40px rgba(255,255,255,0.05);
+      position: relative;
+      transition: box-shadow 1s ease;
       display: flex;
       flex-direction: column;
       align-items: center;
-      justify-content: center;
-      padding: 2rem;
-      flex: 1;
-      max-width: 1500px;
-      position: relative;
-      z-index: 1;
     }
 
-    .smalltitle {
-      font-size: clamp(20px, 3vw, 28px);
-      opacity: 0.8;
-      margin-bottom: 0;
-    }
+    .clock-card.special-glow { box-shadow: 0 0 60px rgba(239, 68, 68, 0.4); }
+
+    .clock-label { font-size: 18px; margin-bottom: 1rem; opacity: 0.8; text-transform: uppercase; }
 
     .clock {
-      font-size: clamp(80px, 14vw, 400px);
-      font-weight: 800;
-      line-height: 1;
+      font-family: 'Roboto', sans-serif;
+      font-size: clamp(100px, 18vw, 280px); 
+      font-weight: 800; line-height: 0.9; margin: 0;
+      background: linear-gradient(to bottom, #ffffff 30%, #a8a8a8 100%);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      font-variant-numeric: tabular-nums; 
     }
 
     .message {
-      font-size: clamp(20px, 3vw, 42px);
-      font-weight: 600;
-      transition: opacity 1s ease;
-      min-height: 1.2em; /* Voorkomt verspringen */
+      font-size: clamp(18px, 2.5vw, 24px);
+      margin: 1.5rem auto 1rem; min-height: 1.2em;
+      text-transform: uppercase;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.3);
     }
 
-    #xmas-countdown {
-      font-size: clamp(12px, 1.8vw, 20px);
+    .card-countdown {
       margin-top: 1rem;
-      opacity: 0.5;
-      font-weight: 400;
+      padding-top: 1.5rem;
+      border-top: 1px solid rgba(255,255,255,0.1);
+      width: 100%;
+      font-size: 1.3rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
     }
 
-    .logo {
-      position: absolute;
-      top: 20px; right: 30px;
-      max-width: 300px;
-      opacity: 0.9;
-      transition: opacity 0.3s ease;
-      z-index: 10;
-    }
-    .logo:hover { opacity: 1; }
+    .highlight { color: #9ea700; font-weight: bold; margin-left: 8px; }
 
-    /* --- TICKER ANIMATION (FIXED) --- */
+    footer { 
+      display: flex; 
+      align-items: flex-end; 
+      overflow: hidden; 
+      position: absolute; 
+      bottom: 0; 
+      left: 0; 
+      width: 100%;
+    }
+
+    .ticker-wrap {
+      width: 100%; 
+      background: rgba(255, 255, 255, 0.08);
+      backdrop-filter: blur(15px); 
+      -webkit-backdrop-filter: blur(15px);
+      padding: 1rem 0;
+      overflow: hidden;
+    }
+
     #counter {
-      font-size: clamp(18px, 2.4vw, 28px);
-      position: absolute;
-      bottom: 1.8rem;
-      width: auto;
-      white-space: nowrap;
-      left: 100%; /* Start buiten beeld rechts */
-      animation: ticker 60s linear infinite;
+      white-space: nowrap; 
+      display: inline-block; 
+      font-size: 1.5rem; 
+      padding-left: 100vw; /* Start buiten beeld aan de rechterkant */
+      animation: ticker 40s linear infinite; 
+      text-transform: uppercase;
       will-change: transform;
     }
 
-    @keyframes ticker {
-      0% { transform: translate3d(0, 0, 0); }
-      100% { transform: translate3d(calc(-100vw - 100%), 0, 0); }
+    @keyframes ticker { 
+      0% { transform: translate3d(0, 0, 0); } 
+      100% { transform: translate3d(-100%, 0, 0); } /* Loopt door tot tekst links helemaal weg is */
     }
   </style>
 </head>
 <body>
 
-  <video autoplay muted loop id="bg-day" class="bg-video">
-    <source src="background_day.mp4" type="video/mp4">
-  </video>
-  <video autoplay muted loop id="bg-night" class="bg-video">
-    <source src="background_night.mp4" type="video/mp4">
-  </video>
-  <video autoplay muted loop id="bg-alt" class="bg-video">
-    <source src="background_alt.mp4" type="video/mp4">
-  </video>
-
-  <div id="video-overlay"></div>
-  <img src="HHS_grijs_fc copy.png" alt="Logo" class="logo" />
-
-  <div class="wrap">
-    <div id="title" class="smalltitle">Laden...</div>
-    <div id="clock" class="clock">--:--</div>
-    <div id="message" class="message">...</div>
-    <div id="xmas-countdown"></div>
+  <div class="bg-container">
+    <div id="orb1" class="orb orb1"></div>
+    <div id="orb2" class="orb orb2"></div>
+    <div id="orb3" class="orb orb3"></div>
+    <div id="orb4" class="orb orb4"></div>
+    <div id="orb5" class="orb orb5"></div>
   </div>
 
-  <div id="counter">Welkom bij Frontoffice FZ&IT!</div>
+  <div class="container">
+    <header>
+      <div class="brand-title">
+        <span class="brand-frontoffice">Frontoffice</span>
+        <span class="brand-fzit">FZIT</span>
+      </div>
+      <img src="HHS_grijs_fc copy.png" alt="Logo" class="logo" onerror="this.style.display='none'"/>
+    </header>
+
+    <main>
+      <div id="date-block" class="info-block date-display">Laden...</div>
+      
+      <div id="card" class="clock-card">
+        <div class="clock-label">De tijd bij Frontoffice FZ&IT is momenteel</div>
+        <div id="clock" class="clock">00:00</div>
+        <div id="message" class="message">Welkom</div>
+        
+        <div class="card-countdown">
+          <span id="countdown-label">Weekend in:</span>
+          <span id="countdown-time" class="highlight">...</span>
+        </div>
+      </div>
+    </main>
+
+    <footer>
+      <div class="ticker-wrap">
+        <div id="counter">Systeem wordt geïnitialiseerd...</div>
+      </div>
+    </footer>
+  </div>
 
   <script>
-    // --- CONFIGURATIE ---
     const CONFIG = {
       days: ["zondag","maandag","dinsdag","woensdag","donderdag","vrijdag","zaterdag"],
       months: ["januari","februari","maart","april","mei","juni","juli","augustus","september","oktober","november","december"],
-      shifts: {
-        weekday: { start: 8, end: 19.5 }, // 19:30 = 19.5
-        friday:  { start: 8, end: 17 },
-        preShiftMinutes: 15 // 07:45 tot 08:00
-      }
     };
 
-    // Quotes voor specifieke tijdstippen
     const workQuotes = {
       "08:00": "De dag is begonnen. Wat een ellende. Of toch niet 👀",
       "08:30": "De half negen dienst is binnen (hopen we dan). Tijd om echt te knallen!",
@@ -182,225 +259,217 @@
       "16:29": "Begonnen om 8 uur? Dan NU gaannnnnn 🏃‍♂️💨",
       "16:30": "Werk gaat gewoon nog door, sadly 😏",
       "17:00": "Doorzetter detected.",
-      "18:00": "Nog geen tweede koffie? Respect.",
-      "19:30": "Vrijheid! 🎉"
+      "18:00": "Nog geen tweede koffie? Respect. De avond is nog jong!",
+      "18:30": "De avondploeg houdt stand. De helden van de Frontoffice!",
+      "19:00": "Laatste loodjes. Nog 30 minuten knallen!",
+      "19:30": "Vrijheid! Bro, doe die Frontoffice op slot 🎉"
     };
 
-    // Ticker teksten
     const tickerTexts = {
       outside: [
         "✨ Het is buiten werktijd. Dit systeem mist je al, maar jij hoeft er niet te zijn ✨",
         "✨ Buiten de shift en tóch hier? Dapper. Maar ga leven ✨",
         "✨ Geen dienst, geen stress, geen tickets. Vrijheid ✨",
         "✨ Je bent off-duty. Zelfs Directory Manager zou dit begrijpen ✨",
-        "✨ Dit is geen werkmoment. Dit is een ‘sluit je laptop’-moment ✨",
-        "✨ De Frontoffice slaapt. Jij zou dat ook moeten doen ✨",
-        "✨ Buiten werktijd. De systemen wachten wel. Jij niet ✨"
+        "✨ De Frontoffice slaapt. Jij zou dat ook moeten doen ✨"
       ],
       motivation: [
         "Het is weer begonnen, die werkdag. Het is niet anders, dus we gaan het gewoon doen",
         "Jij draait als een oude follow me printer. Piepend, maar functioneel",
-        "Je houdt het vol, al voelt het alsof je in een kamer zonder verwarming zit. Wat half waar is",
+        "Je houdt het vol, al voelt het alsof je in een kamer zonder verwarming zit",
         "Je zit in een prima flow. Niet geweldig, niet slecht, gewoon... werk",
         "Systemen crashen? Jij niet. Jij bent de laatste Directory Manager die overeind blijft",
         "Je hebt de vibe van iemand die Azure AD met één hand kan fixen",
-        "Je bent officieel boven verwachting aan het functioneren, al staat het nergens",
+        "Je bent officieel boven verwachting aan het functioneren",
         "De energie komt op gang. Je bent basically een menselijke OpenIDM-sync",
         "Je gaat harder dan Ozan die een teamuitje planned",
         "Dit begint op iets indrukwekkends te lijken. De backoffice voelt je aanwezigheid",
         "Halverwege en je straalt als een monitor in het donker",
         "Je hebt meer momentum dan de mensen in Poseidon",
-        "Je dendert door processen als een incident waar geen kennisitem voor bestaat",
         "Je workflow is smoother dan een havercappu van Stacey",
         "De eindtijd voelt ineens realistisch. Tijd? Tijd is een illusie. Jij niet",
         "Je bent on fire. Als iemand nu belt met: Mijn wachtwoord werkt niet... you got this",
-        "Je bent basically de Functioneel Beheerder Onstage van deze werkdag.",
+        "Je bent basically de Functioneel Beheerder Onstage van deze werkdag",
         "Je houdt de boel bij elkaar als duct tape in een serverruimte",
         "Je bent sneller dan het moment dat DM eindelijk werd uitgefaseerd",
         "Ruik je die finish al? Hij ruikt naar vrijheid en een warme jas",
         "Laatste fase. Je gaat als een tierelier. De tijd is bang voor jou",
-        "Nog héél even en je ontsnapt uit deze digitale jungle als een ware ontsnappingskunstenaar",
         "JIJ. BENT. EEN. LEGENDE. De eindtijd buigt voor je. Het universum applaudisseert"
       ],
       moods: ["mooie", "vreselijke", "matige", "neutrale", "prima", "fantastische", "mooie"]
     };
 
-    // --- STATE VARIABLES ---
     let lastQuoteKey = "";
-    let lastOutsideBlock = -1;
-    let cachedOutsideMessage = "";
-
-    // --- HELPERS ---
+    let lastMode = ""; 
+    let weatherString = "Het weerbericht is onderweg...";
+    let nextTickerContent = ""; // Buffer voor de volgende update
     const two = n => String(n).padStart(2, '0');
 
-    // --- MAIN FUNCTIONS ---
+    const els = {
+        clock: document.getElementById('clock'),
+        date: document.getElementById('date-block'),
+        message: document.getElementById('message'),
+        counter: document.getElementById('counter'),
+        card: document.getElementById('card'),
+        cdLabel: document.getElementById('countdown-label'),
+        cdTime: document.getElementById('countdown-time'),
+        orbs: [document.getElementById('orb1'), document.getElementById('orb2'), document.getElementById('orb3'), document.getElementById('orb4'), document.getElementById('orb5')]
+    };
 
-    function setDateTitle(now) {
-      const dateStr = `Het is ${CONFIG.days[now.getDay()]} ${now.getDate()} ${CONFIG.months[now.getMonth()]} ${now.getFullYear()} en de tijd bij Frontoffice FZ&IT is nu:`;
-      document.getElementById('title').textContent = dateStr;
+    async function updateWeather() {
+      try {
+        const res = await fetch('https://api.open-meteo.com/v1/forecast?latitude=52.0767&longitude=4.2986&current=temperature_2m,weather_code&timezone=Europe%2FBerlin');
+        const data = await res.json();
+        const temp = Math.round(data.current.temperature_2m);
+        const code = data.current.weather_code;
+        
+        let desc = "Lekker weertje";
+        let icon = "🌤️";
+        
+        if (code === 0) { desc = "Zonnig"; icon = "☀️"; }
+        else if (code <= 3) { desc = "Licht bewolkt"; icon = "⛅"; }
+        else if (code <= 48) { desc = "Mistig"; icon = "🌫️"; }
+        else if (code <= 67) { desc = "Regenachtig"; icon = "🌧️"; }
+        else if (code <= 77) { desc = "Sneeuw"; icon = "❄️"; }
+        else if (code <= 82) { desc = "Buien"; icon = "🌦️"; }
+        else if (code >= 95) { desc = "Onweer"; icon = "⛈️"; }
+        else { desc = "Bewolkt"; icon = "☁️"; }
+
+        weatherString = `Het weer buiten De Haagse is giving ${temp}°C en het is ${desc} ${icon}`;
+      } catch (e) {
+        weatherString = "Weer momenteel niet beschikbaar";
+      }
     }
 
-    function updateQuote(h, m) {
-      const timeKey = `${h}:${m}`;
-      let quote = workQuotes[timeKey];
-      
-      // Fallback naar half uur afronding als er geen exacte match is
-      if (!quote) {
-        const rounded = `${h}:${m < 30 ? "00" : "30"}`;
-        quote = workQuotes[rounded] || "";
+    function checkIsOpen(now) {
+      const day = now.getDay();
+      const h = now.getHours();
+      const m = now.getMinutes();
+      const totalMins = h * 60 + m;
+      if (day >= 1 && day <= 4) return (totalMins >= 8*60 && totalMins < 19.5*60);
+      if (day === 5) return (totalMins >= 8*60 && totalMins < 17*60);
+      return false;
+    }
+
+    function updateCountdown(now) {
+      const day = now.getDay();
+      let target = new Date(now);
+      let isWeekendCountdown = true;
+
+      if (day === 5 && now.getHours() < 17) {
+          target.setHours(17, 0, 0, 0);
+      } else if (day === 6 || day === 0 || (day === 5 && now.getHours() >= 17) || (day === 1 && now.getHours() < 8)) {
+          isWeekendCountdown = false;
+          target.setDate(now.getDate() + ((day === 0 ? 1 : day === 1 ? 0 : day === 6 ? 2 : 3)));
+          target.setHours(8, 0, 0, 0);
+      } else {
+          let daysToFri = (5 - day + 7) % 7;
+          target.setDate(now.getDate() + daysToFri);
+          target.setHours(17, 0, 0, 0);
       }
 
+      const diff = target - now;
+      const d = Math.floor(diff / (1000 * 60 * 60 * 24));
+      const h = Math.floor((diff / (1000 * 60 * 60)) % 24);
+      const m = Math.floor((diff / 1000 / 60) % 60);
+
+      els.cdLabel.textContent = isWeekendCountdown ? "Het weekend begint over" : "Werken begint weer over";
+      
+      let displayStr = "";
+      if (d > 0) displayStr += `${d} dagen en `;
+      displayStr += `${h} uur`;
+      
+      els.cdTime.textContent = displayStr;
+    }
+
+    function updateVisuals(now) {
+      const h = now.getHours();
+      const m = now.getMinutes();
+      const day = now.getDay();
+      const isOpen = checkIsOpen(now);
+
+      let newMode = "night";
+      if (day >= 1 && day <= 5 && h === 16 && m === 29) {
+        newMode = "special";
+      } else if (isOpen) {
+        newMode = "day";
+      }
+
+      if (newMode !== lastMode) {
+        lastMode = newMode;
+        let c = (newMode === "special") ? ["#ef4444", "#ffba00", "#ffffff", "#ef4444", "#ffba00"] :
+                (newMode === "day") ? ["#9ea700", "#ffba00", "#00b2cd", "#9ea700", "#ffba00"] :
+                ["#1e3a8a", "#4c1d95", "#312e81", "#1e3a8a", "#1e1b4b"];
+
+        if (newMode === "special") {
+            els.orbs.forEach(orb => orb.classList.add('special-active'));
+            els.card.classList.add('special-glow');
+        } else {
+            els.orbs.forEach(orb => orb.classList.remove('special-active'));
+            els.card.classList.remove('special-glow');
+        }
+        els.orbs.forEach((orb, i) => orb.style.backgroundColor = c[i]);
+      }
+
+      const timeKey = `${two(h)}:${two(m)}`;
       if (timeKey !== lastQuoteKey) {
-        const msgEl = document.getElementById('message');
-        const textToShow = quote || "Momenteel is de Frontoffice FZ&IT gesloten.";
-        
-        msgEl.style.opacity = 0;
-        setTimeout(() => {
-          msgEl.textContent = textToShow;
-          msgEl.style.opacity = 1;
-        }, 500);
+        const textToShow = isOpen ? (workQuotes[timeKey] || workQuotes[`${two(h)}:${m < 30 ? "00" : "30"}`] || "Lekker bezig!") : "De Frontoffice is momenteel gesloten.";
+        if (els.message.textContent !== textToShow) {
+            els.message.style.opacity = 0;
+            setTimeout(() => { els.message.textContent = textToShow; els.message.style.opacity = 1; }, 500);
+        }
         lastQuoteKey = timeKey;
       }
     }
 
-    function updateBackground(now) {
-      const day = now.getDay();
-      const totalMins = now.getHours() * 60 + now.getMinutes();
-      
-      const vidDay = document.getElementById("bg-day");
-      const vidNight = document.getElementById("bg-night");
-      const vidAlt = document.getElementById("bg-alt");
-
-      // Reset all classes
-      vidDay.classList.remove('active');
-      vidNight.classList.remove('active');
-      vidAlt.classList.remove('active');
-
-      // 1. Speciale "Friday 16:29" video
-      if (day >= 1 && day <= 5 && totalMins === 16*60 + 29) {
-        vidAlt.classList.add('active');
-        return;
-      }
-
-      // 2. Bepaal of het 'dag' is (tussen 08:00 en 19:30 ma-do, of tot 17:00 vr)
-      let isDay = false;
-      if (day >= 1 && day <= 4) { // Ma-Do
-        if ((totalMins >= 8*60 && totalMins < 19*60+30)) isDay = true;
-      } else if (day === 5) { // Vrijdag
-        if ((totalMins >= 8*60 && totalMins < 17*60)) isDay = true;
-      }
-
-      // 3. Zet juiste video aan
-      if (isDay) vidDay.classList.add('active');
-      else vidNight.classList.add('active');
-    }
-
-    function updateXmasCountdown(now) {
-      const el = document.getElementById('xmas-countdown');
-      let targetYear = now.getFullYear();
-      let target = new Date(targetYear, 11, 24, 17, 0, 0); // 24 Dec 17:00
-
-      // Zoek laatste vrijdag voor kerst
-      while (target.getDay() !== 5) target.setDate(target.getDate() - 1);
-
-      // Als al voorbij, pak volgend jaar
-      if (now >= target) {
-        target = new Date(targetYear + 1, 11, 24, 17, 0, 0);
-        while (target.getDay() !== 5) target.setDate(target.getDate() - 1);
-      }
-
-      const diff = target - now;
-      if (diff <= 0) {
-        el.textContent = `Kerstvakantie ${target.getFullYear()}! 🎄✨ Geniet ervan!`;
-        return;
-      }
-
-      const days = Math.ceil(diff / (1000 * 60 * 60 * 24));
-      const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
-      const mins = Math.floor((diff / (1000 * 60)) % 60);
-
-      if (days > 1) el.textContent = `Nog ${days} dagen tot de kerstvakantie van ${target.getFullYear()} 🎄`;
-      else if (hours > 0) el.textContent = `Nog ${hours} uur tot de kerstvakantie van ${target.getFullYear()} 🎄`;
-      else el.textContent = `Nog ${mins} minuten tot de kerstvakantie van ${target.getFullYear()} 🎉`;
-    }
-
-    function updateTicker(now) {
-      const counterEl = document.getElementById('counter');
-      const day = now.getDay();
-      
-      // Weekend Check
-      if (day === 0 || day === 6) {
-        counterEl.textContent = `✨ Bro, het is ${CONFIG.days[day]}. Er is geen werk vandaag. Ga naar huis. Vier weekend ✨`;
-        return;
-      }
-
-      // Bepaal shift tijden voor vandaag
-      const isFriday = day === 5;
-      const startH = CONFIG.shifts.weekday.start;
-      const endH = isFriday ? CONFIG.shifts.friday.end : CONFIG.shifts.weekday.end;
-      
-      const shiftStart = new Date(now); shiftStart.setHours(startH, 0, 0, 0);
-      const shiftEnd = new Date(now); 
-      // Correctie voor halve uren (19.5 = 19:30)
-      shiftEnd.setHours(Math.floor(endH), (endH % 1) * 60, 0, 0);
-
-      const preStart = new Date(shiftStart);
-      preStart.setMinutes(shiftStart.getMinutes() - CONFIG.shifts.preShiftMinutes);
-
-      // 1. Pre-Shift (07:45 - 08:00)
-      if (now >= preStart && now < shiftStart) {
-        const minsToOpen = Math.ceil((shiftStart - now) / 60000);
-        counterEl.textContent = `De Frontoffice opent over ${minsToOpen} ${minsToOpen === 1 ? 'minuut' : 'minuten'}. Bereid je mentaal voor 😭`;
-        return;
-      }
-
-      // 2. Buiten Shift
-      if (now < shiftStart || now > shiftEnd) {
-        const currentBlock = Math.floor(now.getMinutes() / 5);
-        if (currentBlock !== lastOutsideBlock) {
-          lastOutsideBlock = currentBlock;
-          const idx = Math.floor(now.getTime() / 300000) % tickerTexts.outside.length; // elke 5 min
-          cachedOutsideMessage = tickerTexts.outside[idx];
-        }
-        counterEl.textContent = cachedOutsideMessage;
-        return;
-      }
-
-      // 3. Binnen Shift (Motivatie)
-      const minsLeft = Math.ceil((shiftEnd - now) / 60000);
-      const totalShiftMins = (shiftEnd - shiftStart) / 60000;
-      
-      // Bereken welk bericht (bucket logic)
-      const bucketSize = 30; // elke 30 min een nieuwe 'vibe'
-      const bucketIdx = Math.min(
-        tickerTexts.motivation.length - 1,
-        Math.floor((totalShiftMins - minsLeft) / bucketSize)
-      );
-
-      const mood = tickerTexts.moods[day] || "";
-      counterEl.textContent = `✨ Welkom bij Frontoffice FZ&IT ✨ Succes met je dienst op deze ${mood} ${CONFIG.days[day]} 
-      ✨ Er zijn nog ${minsLeft} minuten te gaan tot het einde van de shift ✨ ${tickerTexts.motivation[bucketIdx]} ✨`;
-    }
-
-    // --- MASTER LOOP ---
     function tick() {
       const now = new Date();
-      const h = two(now.getHours());
-      const m = two(now.getMinutes());
-
-      document.getElementById('clock').textContent = `${h}:${m}`;
+      els.clock.textContent = `${two(now.getHours())}:${two(now.getMinutes())}`;
+      els.date.textContent = `${CONFIG.days[now.getDay()]} ${now.getDate()} ${CONFIG.months[now.getMonth()]} ${now.getFullYear()}`;
+      updateVisuals(now);
+      updateCountdown(now);
       
-      setDateTitle(now);
-      updateQuote(h, m);
-      updateBackground(now);
-      updateXmasCountdown(now);
-      updateTicker(now);
+      const isOpen = checkIsOpen(now);
+      const isWorkday = (now.getDay() >= 1 && now.getDay() <= 5);
+      
+      let tickerText = "";
+
+      if (isWorkday && now.getHours() === 7 && now.getMinutes() >= 45) {
+          const totalSecondsUntilEight = (15 * 60) - ((now.getMinutes() - 45) * 60 + now.getSeconds());
+          const displayMins = Math.floor(totalSecondsUntilEight / 60);
+          const displaySecs = totalSecondsUntilEight % 60;
+          tickerText = `⚠️ ATTENTIE: De werkdag begint over precies ${displayMins} minuten en ${displaySecs} seconden ⚠️`;
+      } 
+      else if (isOpen) {
+          const isFriday = now.getDay() === 5;
+          const endH = isFriday ? 17 : 19.5;
+          const shiftEnd = new Date(now); shiftEnd.setHours(Math.floor(endH), (endH % 1) * 60, 0, 0);
+          const minsLeft = Math.ceil((shiftEnd - now) / 60000);
+          const motivationIdx = (now.getHours() + now.getDay()) % tickerTexts.motivation.length; 
+          tickerText = `✨ Welkom bij Frontoffice FZ&IT ✨ Nog ${minsLeft} minuten tot einde shift op deze ${tickerTexts.moods[now.getDay()]} ${CONFIG.days[now.getDay()]} ✨ ${tickerTexts.motivation[motivationIdx]}`;
+      } else {
+          const outsideIdx = now.getMinutes() % tickerTexts.outside.length;
+          tickerText = tickerTexts.outside[outsideIdx];
+      }
+
+      // We schrijven niet direct naar het element, maar vullen de buffer
+      nextTickerContent = `${tickerText} ✨ ${weatherString}`;
+
+      // Bij de eerste keer laden (of als het leeg is) vullen we hem wel direct
+      if (els.counter.textContent === "Systeem wordt geïnitialiseerd...") {
+        els.counter.textContent = nextTickerContent;
+      }
     }
 
-    // Start
-    tick();
-    setInterval(tick, 1000);
+    // EVENT LISTENER: Alleen updaten als de animatie klaar is met een rondje
+    els.counter.addEventListener('animationiteration', () => {
+      els.counter.textContent = nextTickerContent;
+    });
 
+    updateWeather();
+    setInterval(updateWeather, 600000); 
+    tick(); 
+    setInterval(tick, 1000);
   </script>
 </body>
 </html>
