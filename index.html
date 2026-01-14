@@ -452,10 +452,10 @@
           tickerText = tickerTexts.outside[outsideIdx];
       }
 
-      // We schrijven niet direct naar het element, maar vullen de buffer
+      // Buffer voor ticker
       nextTickerContent = `${tickerText} ✨ ${weatherString}`;
 
-      // Bij de eerste keer laden (of als het leeg is) vullen we hem wel direct
+      // Bij de eerste keer laden (of als het leeg is) dan wel vullen
       if (els.counter.textContent === "Systeem wordt geïnitialiseerd...") {
         els.counter.textContent = nextTickerContent;
       }
