@@ -31,6 +31,29 @@
       overflow: hidden;
     }
 
+    .grain {
+      position: fixed;
+      top: -150%;
+      left: -150%;
+      width: 300%;
+      height: 300%;
+      z-index: 1; 
+      pointer-events: none;
+      opacity: 0.5; 
+      filter: url(#grainy);
+      animation: noise 0.5s steps(3) infinite;
+    }
+
+    @keyframes noise {
+      0% { transform: translate(0,0); }
+      10% { transform: translate(-5%,-5%); }
+      30% { transform: translate(5%,-10%); }
+      50% { transform: translate(-10%,5%); }
+      70% { transform: translate(0,10%); }
+      90% { transform: translate(10%,5%); }
+      100% { transform: translate(5%,0); }
+    }
+
     .bg-container {
       position: fixed;
       top: 0; left: 0;
@@ -74,7 +97,7 @@
       display: grid;
       grid-template-rows: 100px 1fr 120px;
       padding: 2rem;
-      z-index: 1;
+      z-index: 2;
       position: relative;
     }
 
@@ -95,20 +118,6 @@
       justify-content: center; align-items: center; text-align: center;
     }
 
-    .info-block {
-      background: var(--glass-bg);
-      backdrop-filter: var(--glass-filter);
-      -webkit-backdrop-filter: var(--glass-filter);
-      padding: 0.6rem 2.5rem;
-      border-radius: 12px;
-      border: var(--glass-border);
-      text-transform: uppercase;
-      letter-spacing: 2px;
-      box-shadow: var(--glass-shadow);
-    }
-
-    .date-display { font-size: 1.3rem; margin-bottom: 2rem; }
-
     .clock-card {
       background: var(--glass-bg);
       backdrop-filter: blur(12px) saturate(160%); 
@@ -126,64 +135,57 @@
 
     .clock-card.special-glow { box-shadow: 0 0 60px rgba(239, 68, 68, 0.4); }
 
-    .clock-label { font-size: 18px; margin-bottom: 1rem; opacity: 0.8; text-transform: uppercase; }
+    .clock-label { 
+      font-size: 24px; 
+      margin-bottom: 1rem; 
+      opacity: 0.8; 
+      
+      min-height: 1.2em; 
+      transition: opacity 0.5s ease;
+    }
 
-.clock {
-  font-family: 'Inter', system-ui, -apple-system, sans-serif;
-  font-size: clamp(100px, 16vw, 240px); 
-  font-weight: 900; 
-  line-height: 1; 
-  margin: 0;
-  font-variant-numeric: tabular-nums;
-  
-  background: linear-gradient(
-    45deg, 
-    #ffffff 10%, 
-    #ffffff 25%, 
-    rgba(158, 167, 0, 0.6) 50%, 
-    #ffffff 75%, 
-    #ffffff 90%
-  );
-  
-  background-size: 600% auto; 
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  
-  animation: shine 45s linear infinite;
-}
+    .clock {
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      font-size: clamp(100px, 16vw, 240px); 
+      font-weight: 900; 
+      line-height: 1; 
+      margin: 0;
+      font-variant-numeric: tabular-nums;
+      background: linear-gradient(45deg, #ffffff 10%, #ffffff 25%, rgba(158, 167, 0, 0.6) 50%, #ffffff 75%, #ffffff 90%);
+      background-size: 600% auto; 
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      animation: shine 45s linear infinite;
+    }
 
-@keyframes shine {
-  0% { background-position: 300% center; }
-  100% { background-position: -300% center; }
-}
-
-@keyframes shine-right {
-  0% { background-position: 150% center; }
-  100% { background-position: -150% center; }
-}
-
-@keyframes shine-left {
-  0% { background-position: -150% center; }
-  100% { background-position: 150% center; }
-}
+    @keyframes shine {
+      0% { background-position: 300% center; }
+      100% { background-position: -300% center; }
+    }
 
     .message {
       font-size: clamp(18px, 2.5vw, 24px);
-      margin: 1.5rem auto 1rem; min-height: 1.2em;
+      margin: 1.5rem auto 1rem; 
+      min-height: 3em;
+      max-width: 800px;
       text-transform: uppercase;
       text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
 
     .card-countdown {
-  display: none; /* Standaard verbergen */
-  margin-top: 1rem;
-  padding-top: 1.5rem;
-  border-top: 1px solid rgba(255,255,255,0.1);
-  width: 100%;
-  font-size: 1.3rem;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-}
+      display: none;
+      opacity: 0.5;
+      margin-top: 1rem;
+      padding-top: 1.5rem;
+      border-top: 1px solid rgba(255,255,255,0.1);
+      width: 100%;
+      font-size: 1.3rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
 
     .highlight { color: #9ea700; font-weight: bold; margin-left: 8px; }
 
@@ -210,7 +212,7 @@
       white-space: nowrap; 
       display: inline-block; 
       font-size: 1.5rem; 
-      padding-left: 100vw; /* Start buiten beeld aan de rechterkant */
+      padding-left: 100vw; 
       animation: ticker 40s linear infinite; 
       text-transform: uppercase;
       will-change: transform;
@@ -218,11 +220,19 @@
 
     @keyframes ticker { 
       0% { transform: translate3d(0, 0, 0); } 
-      100% { transform: translate3d(-100%, 0, 0); } /* Loopt door tot tekst links helemaal weg is */
+      100% { transform: translate3d(-100%, 0, 0); }
     }
   </style>
 </head>
 <body>
+
+  <svg style="display: none;">
+    <filter id="grainy">
+      <feTurbulence type="fractalNoise" baseFrequency="0.65" numOctaves="3" stitchTiles="stitch" />
+      <feColorMatrix type="saturate" values="0" />
+    </filter>
+  </svg>
+  <div class="grain"></div>
 
   <div class="bg-container">
     <div id="orb1" class="orb orb1"></div>
@@ -242,12 +252,10 @@
     </header>
 
     <main>
-      <div id="date-block" class="info-block date-display">Laden...</div>
-      
       <div id="card" class="clock-card">
-        <div class="clock-label">De tijd bij Frontoffice FZ&IT is momenteel</div>
+        <div id="dynamic-label" class="clock-label">De tijd bij Frontoffice FZ&IT is momenteel:</div>
         <div id="clock" class="clock">00:00</div>
-        <div id="message" class="message">Welkom</div>
+        <div id="message" class="message"></div>
         
         <div class="card-countdown">
           <span id="countdown-label">Weekend in:</span>
@@ -270,44 +278,44 @@
     };
 
     const workQuotes = {
-      "08:00": "De dag is begonnen. Wat een ellende. Of toch niet 👀",
-      "08:30": "De half negen dienst is binnen (hopen we dan). Tijd om echt te knallen!",
-      "09:00": "Eerste meldingen overleefd, toch? Je doet het geweldig.",
-      "09:30": "Je bent op stoom, gek. Choo choo bishh 🚂",
-      "10:00": "Jij en de koffiemachine. Een liefdesverhaal 🥰",
-      "10:30": "De ochtend is van de baas. De avond van jou",
-      "11:00": "Avonddienstmodus aan (behalve op vrijdag).",
-      "11:30": "Bijna lunchtijd, held.",
-      "12:00": "Lunch incoming 🥪",
+      "08:00": "De dag is gestart. Koffie is je beste vriend.",
+      "08:30": "Rustig opstarten. Wij fixen het wel.",
+      "09:00": "Meldingen onder controle? Jij bent de baas.",
+      "09:30": "Vol gas. De Frontoffice draait op volle toeren.",
+      "10:00": "Tijd voor de eerste ronde koffie.",
+      "10:30": "Techniek faalt, maar jij niet.",
+      "11:00": "Nog even doorbijten tot de lunch.",
+      "11:30": "Bijna lunchtijd, held!",
+      "12:00": "Eet smakelijk! 🥪 Tijd om op te laden.",
       "12:30": "Snack-verantwoordelijkheid ontgrendeld.",
-      "13:00": "After-lunch dip? Niet vandaag bro.",
-      "13:30": "Focus level van een ninja.",
-      "14:00": "Toetsenbord-marathon bezig.",
+      "13:00": "De middagshift. Heldenwerk, fr.",
+      "13:30": "Focus level van een ninja(tje)",
+      "14:00": "Geen stress, alleen oplossingen.",
       "14:30": "Je bent unstoppable.",
-      "15:00": "Nog even... Kijk nog even in TOPdesk",
-      "15:30": "Bijna daar. Keep at it.",
-      "16:00": "Het is bijna 16:29...",
-      "16:29": "Begonnen om 8 uur? Dan NU gaannnnnn 🏃‍♂️💨",
-      "16:30": "Werk gaat gewoon nog door, sadly 😏",
-      "17:00": "Doorzetter detected.",
-      "18:00": "Nog geen tweede koffie? Respect. De avond is nog jong!",
-      "18:30": "De avondploeg houdt stand. De helden van de Frontoffice!",
-      "19:00": "Laatste loodjes. Nog 30 minuten knallen!",
-      "19:30": "Vrijheid! Bro, doe die Frontoffice op slot 🎉"
+      "15:00": "Nog even... Kijk nog even in TOPdesk?",
+      "15:30": "Bijna daar. Keep at it!",
+      "16:00": "Laatste sprint van de dag ploeg.",
+      "16:29": "⚠️ ATTENTIE: Het einde is nabij ⚠️",
+      "16:30": "Dagploeg bedankt. Avondploeg succes!",
+      "17:00": "Doorzetter detected 👀",
+      "17:30": "Avonddienst: De echte bikkels.",
+      "18:30": "Nog heel even volhouden.",
+      "19:29": "Inpakken en wegwezen! Goed gewerkt.",
+      "19:30": "Systeem offline. Tijd voor ontspanning."
     };
 
     const tickerTexts = {
       outside: [
         "✨ Het is buiten werktijd. Dit systeem mist je al, maar jij hoeft er niet te zijn ✨",
-        "✨ Buiten de shift en tóch hier? Dapper. Maar ga leven ✨",
+        "✨ Buiten de shift en tóch hier? Dapper. Maargoed, fijne avond! ✨",
         "✨ Geen dienst, geen stress, geen tickets. Vrijheid ✨",
         "✨ Je bent off-duty. Zelfs Directory Manager zou dit begrijpen ✨",
         "✨ De Frontoffice slaapt. Jij zou dat ook moeten doen ✨"
       ],
       motivation: [
-        "Het is weer begonnen, die werkdag. Het is niet anders, dus we gaan het gewoon doen",
+        "Het is weer begonnen, die werkdag. We gaan het gewoon doen",
         "Jij draait als een oude follow me printer. Piepend, maar functioneel",
-        "Je houdt het vol, al voelt het alsof je in een kamer zonder verwarming zit",
+        "Je houdt het vol, ook zonder verwarming",
         "Je zit in een prima flow. Niet geweldig, niet slecht, gewoon... werk",
         "Systemen crashen? Jij niet. Jij bent de laatste Directory Manager die overeind blijft",
         "Je hebt de vibe van iemand die Azure AD met één hand kan fixen",
@@ -318,7 +326,7 @@
         "Halverwege en je straalt als een monitor in het donker",
         "Je hebt meer momentum dan de mensen in Poseidon",
         "Je workflow is smoother dan een havercappu van Stacey",
-        "De eindtijd voelt ineens realistisch. Tijd? Tijd is een illusie. Jij niet",
+        "De eindtijd voelt ineens realistisch. Tijd? Tijd is een illusion. Jij niet",
         "Je bent on fire. Als iemand nu belt met: Mijn wachtwoord werkt niet... you got this",
         "Je bent basically de Functioneel Beheerder Onstage van deze werkdag",
         "Je houdt de boel bij elkaar als duct tape in een serverruimte",
@@ -332,13 +340,17 @@
 
     let lastQuoteKey = "";
     let lastMode = ""; 
+    let lastMessageText = ""; // Voorwaarde voor tik-effect
     let weatherString = "Het weerbericht is onderweg...";
-    let nextTickerContent = ""; // Buffer voor de volgende update
+    let nextTickerContent = ""; 
+    let typingTimer = null;
+    let labelToggle = true; 
+
     const two = n => String(n).padStart(2, '0');
 
     const els = {
         clock: document.getElementById('clock'),
-        date: document.getElementById('date-block'),
+        dynamicLabel: document.getElementById('dynamic-label'),
         message: document.getElementById('message'),
         counter: document.getElementById('counter'),
         card: document.getElementById('card'),
@@ -347,16 +359,28 @@
         orbs: [document.getElementById('orb1'), document.getElementById('orb2'), document.getElementById('orb3'), document.getElementById('orb4'), document.getElementById('orb5')]
     };
 
+    function typeMessage(text) {
+      if (typingTimer) clearInterval(typingTimer);
+      els.message.textContent = "";
+      let i = 0;
+      typingTimer = setInterval(() => {
+        if (i < text.length) {
+          els.message.textContent += text.charAt(i);
+          i++;
+        } else {
+          clearInterval(typingTimer);
+        }
+      }, 50);
+    }
+
     async function updateWeather() {
       try {
         const res = await fetch('https://api.open-meteo.com/v1/forecast?latitude=52.0767&longitude=4.2986&current=temperature_2m,weather_code&timezone=Europe%2FBerlin');
         const data = await res.json();
         const temp = Math.round(data.current.temperature_2m);
         const code = data.current.weather_code;
-        
         let desc = "Lekker weertje";
         let icon = "🌤️";
-        
         if (code === 0) { desc = "Zonnig"; icon = "☀️"; }
         else if (code <= 3) { desc = "Licht bewolkt"; icon = "⛅"; }
         else if (code <= 48) { desc = "Mistig"; icon = "🌫️"; }
@@ -365,7 +389,6 @@
         else if (code <= 82) { desc = "Buien"; icon = "🌦️"; }
         else if (code >= 95) { desc = "Onweer"; icon = "⛈️"; }
         else { desc = "Bewolkt"; icon = "☁️"; }
-
         weatherString = `Het weer buiten De Haagse is giving ${temp}°C en het is ${desc} ${icon}`;
       } catch (e) {
         weatherString = "Weer momenteel niet beschikbaar";
@@ -385,19 +408,15 @@
     function updateCountdown(now) {
       const isOpen = checkIsOpen(now);
       const countdownContainer = document.querySelector('.card-countdown');
-
-      // Toon de countdown alleen als de frontoffice open is
       if (!isOpen) {
           countdownContainer.style.display = 'none';
-          return; // Stop de rest van de functie
+          return;
       } else {
           countdownContainer.style.display = 'block';
       }
-
       const day = now.getDay();
       let target = new Date(now);
       let isWeekendCountdown = true;
-
       if (day === 5 && now.getHours() < 17) {
           target.setHours(17, 0, 0, 0);
       } else if (day === 6 || day === 0 || (day === 5 && now.getHours() >= 17) || (day === 1 && now.getHours() < 8)) {
@@ -409,23 +428,17 @@
           target.setDate(now.getDate() + daysToFri);
           target.setHours(17, 0, 0, 0);
       }
-
       const diff = target - now;
       const d = Math.floor(diff / (1000 * 60 * 60 * 24));
       const h = Math.floor((diff / (1000 * 60 * 60)) % 24);
-
-      els.cdLabel.textContent = isWeekendCountdown ? "Het weekend begint over" : "Werken begint weer over";
-      
+      els.cdLabel.textContent = isWeekendCountdown ? "(Pssstt... het weekend begint over" : "(Werken begint weer over";
       let displayStr = "";
-      
       if (d > 0) {
           const dagLabel = (d === 1) ? "dag" : "dagen";
           displayStr += `${d} ${dagLabel} en `;
       }
-      
-      const uurLabel = (h === 1) ? "uur" : "uren";
+      const uurLabel = (h === 1) ? "uur)" : "uren)";
       displayStr += `${h} ${uurLabel}`;
-      
       els.cdTime.textContent = displayStr;
     }
 
@@ -434,20 +447,17 @@
       const m = now.getMinutes();
       const day = now.getDay();
       const isOpen = checkIsOpen(now);
-
       let newMode = "night";
       if (day >= 1 && day <= 5 && h === 16 && m === 29) {
         newMode = "special";
       } else if (isOpen) {
         newMode = "day";
       }
-
       if (newMode !== lastMode) {
         lastMode = newMode;
         let c = (newMode === "special") ? ["#ef4444", "#ffba00", "#ffffff", "#ef4444", "#ffba00"] :
                 (newMode === "day") ? ["#9ea700", "#ffba00", "#00b2cd", "#9ea700", "#ffba00"] :
                 ["#1e3a8a", "#4c1d95", "#312e81", "#1e3a8a", "#1e1b4b"];
-
         if (newMode === "special") {
             els.orbs.forEach(orb => orb.classList.add('special-active'));
             els.card.classList.add('special-glow');
@@ -458,57 +468,71 @@
         els.orbs.forEach((orb, i) => orb.style.backgroundColor = c[i]);
       }
 
+      // --- LOGICA VOOR BOODSCHAP EN TIK-EFFECT ---
       const timeKey = `${two(h)}:${two(m)}`;
-      if (timeKey !== lastQuoteKey) {
-        const textToShow = isOpen ? (workQuotes[timeKey] || workQuotes[`${two(h)}:${m < 30 ? "00" : "30"}`] || "Lekker bezig!") : "De Frontoffice is momenteel gesloten.";
-        if (els.message.textContent !== textToShow) {
-            els.message.style.opacity = 0;
-            setTimeout(() => { els.message.textContent = textToShow; els.message.style.opacity = 1; }, 500);
-        }
+      const textToShow = isOpen 
+        ? (workQuotes[timeKey] || workQuotes[`${two(h)}:${m < 30 ? "00" : "30"}`] || "Lekker bezig!") 
+        : "De Frontoffice is momenteel gesloten.";
+
+      if (textToShow !== lastMessageText) {
+        typeMessage(textToShow);
+        lastMessageText = textToShow;
         lastQuoteKey = timeKey;
       }
     }
 
-function tick() {
+    function toggleLabel() {
+      const now = new Date();
+      const isOpen = checkIsOpen(now);
+      const dateStr = `Het is vandaag ${CONFIG.days[now.getDay()]} ${now.getDate()} ${CONFIG.months[now.getMonth()]} ${now.getFullYear()}`;
+      const defaultStr = "De tijd bij Frontoffice FZ&IT is momenteel:";
+      
+      els.dynamicLabel.style.opacity = 0;
+      
+      setTimeout(() => {
+        if (isOpen) {
+          if (!labelToggle) {
+            els.dynamicLabel.textContent = dateStr;
+            els.dynamicLabel.style.textTransform = "none";
+          } else {
+            els.dynamicLabel.textContent = defaultStr;
+            els.dynamicLabel.style.textTransform = "none";
+          }
+          labelToggle = !labelToggle;
+        } else {
+          els.dynamicLabel.textContent = defaultStr;
+          els.dynamicLabel.style.textTransform = "uppercase";
+        }
+        els.dynamicLabel.style.opacity = 0.8;
+      }, 500);
+    }
+
+    function tick() {
       const now = new Date();
       els.clock.textContent = `${two(now.getHours())}:${two(now.getMinutes())}`;
-      els.date.textContent = `${CONFIG.days[now.getDay()]} ${now.getDate()} ${CONFIG.months[now.getMonth()]} ${now.getFullYear()}`;
       updateVisuals(now);
       updateCountdown(now);
-      
       const isOpen = checkIsOpen(now);
       const isWorkday = (now.getDay() >= 1 && now.getDay() <= 5);
-      
       let tickerText = "";
-
       if (isWorkday && now.getHours() === 7 && now.getMinutes() >= 45) {
           const totalSecondsUntilEight = (15 * 60) - ((now.getMinutes() - 45) * 60 + now.getSeconds());
           const displayMins = Math.floor(totalSecondsUntilEight / 60);
           const displaySecs = totalSecondsUntilEight % 60;
           tickerText = `⚠️ ATTENTIE: De werkdag begint over precies ${displayMins} minuten en ${displaySecs} seconden ⚠️`;
-      
           nextTickerContent = tickerText; 
-
       } else if (isOpen) {
           const isFriday = now.getDay() === 5;
           const endH = isFriday ? 17 : 19.5;
           const shiftEnd = new Date(now); shiftEnd.setHours(Math.floor(endH), (endH % 1) * 60, 0, 0);
           const minsLeft = Math.ceil((shiftEnd - now) / 60000);
           const motivationIdx = (now.getHours() + now.getDay()) % tickerTexts.motivation.length; 
-          
           tickerText = `✨ Welkom bij Frontoffice FZ&IT ✨ Nog ${minsLeft} minuten tot einde shift op deze ${tickerTexts.moods[now.getDay()]} ${CONFIG.days[now.getDay()]} ✨ ${tickerTexts.motivation[motivationIdx]}`;
-          
-          // Binnen werktijd: Voeg het weer toe
           nextTickerContent = `${tickerText} ✨ ${weatherString}`;
-
       } else {
           const outsideIdx = now.getMinutes() % tickerTexts.outside.length;
-          tickerText = tickerTexts.outside[outsideIdx];
-          
-          // Buiten werktijd: Alleen de tekst, geen weerbericht
-          nextTickerContent = tickerText;
+          nextTickerContent = tickerTexts.outside[outsideIdx];
       }
-
       if (els.counter.textContent === "Systeem wordt geïnitialiseerd...") {
         els.counter.textContent = nextTickerContent;
       }
@@ -522,6 +546,8 @@ function tick() {
     setInterval(updateWeather, 600000); 
     tick(); 
     setInterval(tick, 1000);
+    toggleLabel(); 
+    setInterval(toggleLabel, 20000);
   </script>
 </body>
 </html>
