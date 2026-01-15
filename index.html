@@ -406,41 +406,75 @@
     }
 
     function updateCountdown(now) {
-      const isOpen = checkIsOpen(now);
-      const countdownContainer = document.querySelector('.card-countdown');
-      if (!isOpen) {
-          countdownContainer.style.display = 'none';
-          return;
-      } else {
-          countdownContainer.style.display = 'block';
-      }
-      const day = now.getDay();
-      let target = new Date(now);
-      let isWeekendCountdown = true;
-      if (day === 5 && now.getHours() < 17) {
-          target.setHours(17, 0, 0, 0);
-      } else if (day === 6 || day === 0 || (day === 5 && now.getHours() >= 17) || (day === 1 && now.getHours() < 8)) {
-          isWeekendCountdown = false;
-          target.setDate(now.getDate() + ((day === 0 ? 1 : day === 1 ? 0 : day === 6 ? 2 : 3)));
-          target.setHours(8, 0, 0, 0);
-      } else {
-          let daysToFri = (5 - day + 7) % 7;
-          target.setDate(now.getDate() + daysToFri);
-          target.setHours(17, 0, 0, 0);
-      }
-      const diff = target - now;
-      const d = Math.floor(diff / (1000 * 60 * 60 * 24));
-      const h = Math.floor((diff / (1000 * 60 * 60)) % 24);
-      els.cdLabel.textContent = isWeekendCountdown ? "(Pssstt... het weekend begint over" : "(Werken begint weer over";
-      let displayStr = "";
-      if (d > 0) {
-          const dagLabel = (d === 1) ? "dag" : "dagen";
-          displayStr += `${d} ${dagLabel} en `;
-      }
-      const uurLabel = (h === 1) ? "uur)" : "uren)";
-      displayStr += `${h} ${uurLabel}`;
-      els.cdTime.textContent = displayStr;
+    const isOpen = checkIsOpen(now);
+    const countdownContainer = document.querySelector('.card-countdown');
+    if (!isOpen) {
+        countdownContainer.style.display = 'none';
+        return;
+    } else {
+        countdownContainer.style.display = 'block';
     }
+
+    const day = now.getDay();
+    const hour = now.getHours();
+    let target = new Date(now);
+    let isWeekendCountdown = true;
+
+    if (day === 5 && hour >= 8 && hour < 17) {
+        target.setHours(17, 0, 0, 0);
+        const diff = target - now;
+        const h = Math.floor(diff / (1000 * 60 * 60));
+        const m = Math.floor((diff / (1000 * 60)) % 60);
+
+        els.cdLabel.textContent = "(Pssstt... het weekend begint over";
+        
+        let displayStr = "";
+        if (h > 0) {
+            displayStr += `${h} uur`;
+        } else {
+            displayStr += `${m} ${m === 1 ? "minuut" : "minuten"}`;
+        }
+        els.cdTime.textContent = displayStr + ")";
+        return; 
+    }
+
+    if (day === 5 && hour < 8) {
+        target.setHours(17, 0, 0, 0);
+    } else if (day === 6 || day === 0 || (day === 5 && hour >= 17) || (day === 1 && hour < 8)) {
+        isWeekendCountdown = false;
+        target.setDate(now.getDate() + ((day === 0 ? 1 : day === 1 ? 0 : day === 6 ? 2 : 3)));
+        target.setHours(8, 0, 0, 0);
+    } else {
+        let daysToFri = (5 - day + 7) % 7;
+        target.setDate(now.getDate() + daysToFri);
+        target.setHours(17, 0, 0, 0);
+    }
+
+    const diff = target - now;
+    const d = Math.floor(diff / (1000 * 60 * 60 * 24));
+    const h = Math.floor((diff / (1000 * 60 * 60)) % 24);
+    const m = Math.floor((diff / (1000 * 60)) % 60); 
+
+    els.cdLabel.textContent = isWeekendCountdown ? "(Pssstt... het weekend begint over" : "(Werken begint weer over";
+    
+    let components = [];
+    
+    if (d > 0) {
+        components.push(`${d} ${d === 1 ? "dag" : "dagen"}`);
+    }
+    
+    if (h > 0) {
+        components.push(`${h} uur`);
+    }
+
+    let displayStr = components.join(" en ");
+    
+    if (components.length === 0) {
+        displayStr = `${m} ${m === 1 ? "minuut" : "minuten"}`;
+    }
+
+    els.cdTime.textContent = displayStr + ")";
+}
 
     function updateVisuals(now) {
       const h = now.getHours();
@@ -468,7 +502,6 @@
         els.orbs.forEach((orb, i) => orb.style.backgroundColor = c[i]);
       }
 
-      // --- LOGICA VOOR BOODSCHAP EN TIK-EFFECT ---
       const timeKey = `${two(h)}:${two(m)}`;
       const textToShow = isOpen 
         ? (workQuotes[timeKey] || workQuotes[`${two(h)}:${m < 30 ? "00" : "30"}`] || "Lekker bezig!") 
