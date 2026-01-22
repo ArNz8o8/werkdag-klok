@@ -3,21 +3,32 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Frontoffice Klok — Clean Countdown v6.7</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet">
+  <title>Frontoffice TV Dashboard</title>
   
   <style>
+  
     @font-face {
-      font-family: 'GT-Walsheim-Pro-Bold';
+      font-family: 'GT-Walsheim-Bold';
       src: url('GT-Walsheim-Pro-Bold.otf') format('opentype');
       font-weight: bold;
+      font-style: normal;
     }
 
     :root {
-      --glass-bg: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.01) 100%);
-      --glass-border: 1px solid rgba(255, 255, 255, 0.15);
-      --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3), inset 0 0 0 1px rgba(255, 255, 255, 0.05);
-      --glass-filter: blur(8px) saturate(120%); 
+      --bg-color: #000000;
+      --bg-work: #353800;    
+      --bg-alarm: #ca433c;   
+      --card-bg: rgba(20, 20, 20, 0.8);
+      --border-color: rgba(255, 255, 255, 0.15);
+      --accent-default: #dfff00; 
+      --text-main: #ffffff;
+      --orb-c1: #dfff00;
+      --orb-c2: #00b2cd;
+      --status-green: #00ff66;
+      --status-red: #ff3333;
+ 
+      --font-main: 'GT-Walsheim-Bold', sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
     }
 
     * { box-sizing: border-box; }
@@ -25,216 +36,248 @@
     html, body { 
       height: 100%; 
       margin: 0; 
-      background-color: #0f172a; 
-      color: #fff;
-      font-family: 'GT-Walsheim-Pro-Bold', system-ui, -apple-system, sans-serif;
+      background-color: var(--bg-color); 
+      color: var(--text-main);
+      font-family: var(--font-main);
       overflow: hidden;
+      cursor: none;
+      transition: background-color 2s ease-in-out;
     }
 
-    .grain {
+    .bg-grid {
       position: fixed;
-      top: -150%;
-      left: -150%;
-      width: 300%;
-      height: 300%;
-      z-index: 1; 
-      pointer-events: none;
-      opacity: 0.5; 
-      filter: url(#grainy);
-      animation: noise 0.5s steps(3) infinite;
-    }
-
-    @keyframes noise {
-      0% { transform: translate(0,0); }
-      10% { transform: translate(-5%,-5%); }
-      30% { transform: translate(5%,-10%); }
-      50% { transform: translate(-10%,5%); }
-      70% { transform: translate(0,10%); }
-      90% { transform: translate(10%,5%); }
-      100% { transform: translate(5%,0); }
-    }
-
-    .bg-container {
-      position: fixed;
-      top: 0; left: 0;
-      width: 100%; height: 100%;
+      inset: 0;
+      background-image: 
+        linear-gradient(to right, #222 2px, transparent 2px),
+        linear-gradient(to bottom, #222 2px, transparent 2px);
+      background-size: 5vw 5vw; 
+      opacity: 0.4;
       z-index: 0;
-      background: #0f172a; 
-      overflow: hidden;
     }
 
-    .orb {
-      position: absolute;
-      border-radius: 50%;
-      filter: blur(60px); 
-      opacity: 0.6;
-      animation-timing-function: ease-in-out;
-      animation-iteration-count: infinite;
-      animation-direction: alternate;
-      will-change: transform, opacity;
-      transition: background-color 3s ease, filter 2s ease;
+    .ambient-light {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      filter: blur(8vw);
+      opacity: 0.5;
     }
 
-    .orb1 { top: -10%; left: -5%; width: 22vw; height: 22vw; animation-name: float1; animation-duration: 43s; }
-    .orb2 { bottom: -5%; right: 5%; width: 25vw; height: 25vw; animation-name: float2; animation-duration: 37s; }
-    .orb3 { top: 20%; right: 25%; width: 18vw; height: 18vw; animation-name: float3; animation-duration: 51s; opacity: 0.4; }
-    .orb4 { bottom: 15%; left: 10%; width: 15vw; height: 15vw; animation-name: float1; animation-duration: 35s; opacity: 0.3; }
-    .orb5 { top: 45%; left: 40%; width: 12vw; height: 12vw; animation-name: float2; animation-duration: 41s; opacity: 0.35; }
+    .orb { position: absolute; border-radius: 50%; transition: background-color 3s ease, transform 10s ease; }
+    .orb1 { top: 10%; left: 15%; width: 35vw; height: 35vw; background: var(--orb-c1); opacity: 0.25; animation: floatSlow 20s infinite alternate; }
+    .orb2 { bottom: 10%; right: 15%; width: 40vw; height: 40vw; background: var(--orb-c2); opacity: 0.20; animation: floatSlow 25s infinite alternate-reverse; }
 
-    @keyframes pulse-fast {
-      0% { transform: scale(1); opacity: 0.5; filter: blur(60px); }
-      50% { transform: scale(1.4); opacity: 0.9; filter: blur(30px); }
-      100% { transform: scale(1); opacity: 0.5; filter: blur(60px); }
+    @keyframes floatSlow { 0% { transform: translate(0,0); } 100% { transform: translate(4vw, 4vw); } }
+    @keyframes pulse-alarm { 0% { opacity: 0.3; } 50% { opacity: 0.9; } 100% { opacity: 0.3; } }
+
+    @keyframes shine {
+      0% { background-position: -200% center; }
+      100% { background-position: 200% center; }
     }
-    .special-active { animation: pulse-fast 1.5s infinite ease-in-out !important; }
 
-    @keyframes float1 { 0% { transform: translate(0, 0); } 50% { transform: translate(10vw, 15vh); } 100% { transform: translate(-5vw, 5vh); } }
-    @keyframes float2 { 0% { transform: translate(0, 0); } 50% { transform: translate(-10vw, -10vh); } 100% { transform: translate(5vw, -15vh); } }
-    @keyframes float3 { 0% { transform: translate(0, 0); } 100% { transform: translate(-20vw, 20vh); } }
+    .special-active .orb { animation: pulse-alarm 1s infinite !important; }
 
-    .container {
-      height: 100vh;
-      display: grid;
-      grid-template-rows: 100px 1fr 120px;
-      padding: 2rem;
+    .app-container {
+      position: relative;
       z-index: 2;
-      position: relative;
-    }
-
-    header { display: flex; justify-content: space-between; align-items: flex-start; }
-
-    .brand-title {
-      display: flex; gap: 12px;
-      font-size: clamp(20px, 1.8vw, 28px);
-      text-transform: uppercase; font-weight: 800; letter-spacing: 1px;
-    }
-    .brand-frontoffice { color: #ffffff; }
-    .brand-fzit { color: #9ea700; }
-
-    .logo { height: 60px; filter: drop-shadow(0 0 10px rgba(255,255,255,0.2)); }
-
-    main {
-      display: flex; flex-direction: column;
-      justify-content: center; align-items: center; text-align: center;
-    }
-
-    .clock-card {
-      background: var(--glass-bg);
-      backdrop-filter: blur(12px) saturate(160%); 
-      -webkit-backdrop-filter: blur(12px) saturate(160%);
-      padding: 3rem 5rem;
-      border-radius: 40px;
-      border: var(--glass-border);
-      box-shadow: 0 25px 60px rgba(0,0,0,0.5), inset 0 0 40px rgba(255,255,255,0.05);
-      position: relative;
-      transition: box-shadow 1s ease;
+      height: 100vh;
       display: flex;
       flex-direction: column;
-      align-items: center;
+      padding: 3vh 3vw;
     }
 
-    .clock-card.special-glow { box-shadow: 0 0 60px rgba(239, 68, 68, 0.4); }
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 2vh;
+      flex-shrink: 0;
+      border-bottom: 2px solid var(--border-color);
+      padding-bottom: 2vh;
+    }
 
-    .clock-label { 
-      font-size: 24px; 
-      margin-bottom: 1rem; 
-      opacity: 0.8; 
-      
-      min-height: 1.2em; 
-      transition: opacity 0.5s ease;
+    .brand-text {
+      font-family: var(--font-main);
+      font-size: clamp(20px, 4vh, 60px);
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    .brand-accent { color: var(--accent-default); }
+    
+    .status-pill {
+      font-family: var(--font-mono);
+      font-size: clamp(12px, 2.5vh, 24px);
+      background: rgba(255,255,255,0.1);
+      padding: 1vh 2vw;
+      border-radius: 100px;
+      border: 2px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+    
+    .status-dot { 
+      width: 1.5vh; 
+      height: 1.5vh; 
+      border-radius: 50%; 
+      background-color: var(--status-green); 
+      box-shadow: 0 0 15px var(--status-green); 
+      transition: all 0.5s ease; 
+    }
+
+    .status-pill.is-offline .status-dot { 
+      background-color: var(--status-red); 
+      box-shadow: 0 0 15px var(--status-red); 
+    }
+
+    main {
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      width: 100%;
+      overflow: hidden;
+    }
+
+    .card {
+      background: var(--card-bg);
+      border: 2px solid var(--border-color);
+      border-radius: 40px;
+      padding: 4vh 4vw;
+      backdrop-filter: blur(30px);
+      display: grid;
+      grid-template-rows: auto 1fr auto auto; 
+      align-items: center;
+      text-align: center;
+      width: 100%;
+      height: 100%;
+    }
+
+    .clock-section.special-glow {
+      box-shadow: 0 0 100px rgba(239, 68, 68, 0.4), inset 0 0 40px rgba(239, 68, 68, 0.2);
+      border-color: rgba(239, 68, 68, 0.8);
+    }
+
+    .clock-label {
+      font-family: var(--font-main);
+      color: var(--accent-default);
+      font-size: clamp(14px, 2.5vh, 32px);
+      letter-spacing: 2px;
+      margin-bottom: 1vh;
+      opacity: 0.9;
+      min-height: 1.5em;
     }
 
     .clock {
-      font-family: 'Inter', system-ui, -apple-system, sans-serif;
-      font-size: clamp(100px, 16vw, 240px); 
-      font-weight: 900; 
-      line-height: 1; 
-      margin: 0;
+      font-family: var(--font-main);
+      font-weight: 800;
+      font-size: clamp(80px, 22vw, 40vh); 
+      line-height: 1;
       font-variant-numeric: tabular-nums;
-      background: linear-gradient(45deg, #ffffff 10%, #ffffff 25%, rgba(158, 167, 0, 0.6) 50%, #ffffff 75%, #ffffff 90%);
-      background-size: 600% auto; 
+      background: linear-gradient(
+        120deg, 
+        rgba(255,255,255,1) 40%, 
+        rgba(255,255,255,0.3) 50%, 
+        rgba(255,255,255,1) 60%
+      );
+      background-size: 200% auto;
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
-      animation: shine 45s linear infinite;
-    }
-
-    @keyframes shine {
-      0% { background-position: 300% center; }
-      100% { background-position: -300% center; }
+      margin: 0;
+      animation: shine 15s linear infinite;
     }
 
     .message {
-      font-size: clamp(18px, 2.5vw, 24px);
-      margin: 1.5rem auto 1rem; 
-      min-height: 3em;
-      max-width: 800px;
-      text-transform: uppercase;
-      text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+      font-family: var(--font-main);
+      font-size: clamp(18px, 4vh, 50px);
+      font-weight: 700;
+      color: #eeeeee;
+      margin: 2vh auto;
+      max-width: 90%;
+      line-height: 1.2;
+      min-height: 2.4em;
       display: flex;
       align-items: center;
       justify-content: center;
     }
 
-    .card-countdown {
-      display: none;
-      opacity: 0.5;
-      margin-top: 1rem;
-      padding-top: 1.5rem;
-      border-top: 1px solid rgba(255,255,255,0.1);
-      width: 100%;
-      font-size: 1.3rem;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-    }
-
-    .highlight { color: #9ea700; font-weight: bold; margin-left: 8px; }
-
-    footer { 
-      display: flex; 
-      align-items: flex-end; 
-      overflow: hidden; 
-      position: absolute; 
-      bottom: 0; 
-      left: 0; 
-      width: 100%;
-    }
-
-    .ticker-wrap {
-      width: 100%; 
+    .countdown-wrapper {
+      padding: 1.5vh 3vw;
       background: rgba(255, 255, 255, 0.08);
-      backdrop-filter: blur(15px); 
-      -webkit-backdrop-filter: blur(15px);
-      padding: 1rem 0;
+      border-radius: 20px;
+      border: 2px solid var(--border-color);
+      min-height: 6vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: fit-content;      
+      margin-left: auto;      
+      margin-right: auto;      
+      min-width: 300px;        
+      max-width: 80%;          
+    }
+
+    .countdown-text {
+      font-family: var(--font-main);
+      font-size: clamp(14px, 2.5vh, 30px);
+    }
+    
+    .countdown-highlight {
+      color: var(--accent-default);
+      font-weight: 700;
+    }
+
+    footer {
+      border-top: 2px solid var(--border-color);
+      margin-top: 2vh;
+      height: 8vh;
+      flex-shrink: 0;
+      background: rgba(0,0,0,0.4);
+      border-radius: 20px;
       overflow: hidden;
+      display: flex;
+      align-items: center;
+    }
+
+    .ticker-icon {
+      padding: 0 2vw;
+      z-index: 10;
+      color: var(--accent-default);
+      background: #000;
+      font-family: var(--font-mono);
+      font-size: clamp(16px, 3vh, 35px);
+      font-weight: 700;
+      height: 100%;
+      display: flex;
+      align-items: center;
     }
 
     #counter {
-      white-space: nowrap; 
-      display: inline-block; 
-      font-size: 1.5rem; 
-      padding-left: 100vw; 
-      animation: ticker 40s linear infinite; 
-      text-transform: uppercase;
+      display: inline-block;
+      white-space: nowrap;
+      padding-left: 100%;
+      animation: ticker 60s linear infinite;
       will-change: transform;
+      -webkit-font-smoothing: antialiased;
+      font-family: var(--font-main);
+      font-size: clamp(16px, 3vh, 35px);
+      font-weight: 700;
+      text-transform: uppercase;
+      color: #e0e0e0;
     }
 
-    @keyframes ticker { 
-      0% { transform: translate3d(0, 0, 0); } 
+    @keyframes ticker {
+      0% { transform: translate3d(0, 0, 0); }
       100% { transform: translate3d(-100%, 0, 0); }
     }
   </style>
 </head>
 <body>
 
-  <svg style="display: none;">
-    <filter id="grainy">
-      <feTurbulence type="fractalNoise" baseFrequency="0.65" numOctaves="3" stitchTiles="stitch" />
-      <feColorMatrix type="saturate" values="0" />
-    </filter>
-  </svg>
-  <div class="grain"></div>
-
-  <div class="bg-container">
+  <div class="bg-grid"></div>
+  <div class="ambient-light">
     <div id="orb1" class="orb orb1"></div>
     <div id="orb2" class="orb orb2"></div>
     <div id="orb3" class="orb orb3"></div>
@@ -242,30 +285,32 @@
     <div id="orb5" class="orb orb5"></div>
   </div>
 
-  <div class="container">
+  <div class="app-container">
     <header>
-      <div class="brand-title">
-        <span class="brand-frontoffice">Frontoffice</span>
-        <span class="brand-fzit">FZIT</span>
+      <div class="brand">
+        <div class="brand-text">Frontoffice <span class="brand-accent">FZIT</span></div>
       </div>
-      <img src="HHS_grijs_fc copy.png" alt="Logo" class="logo" onerror="this.style.display='none'"/>
+      <div id="status-pill" class="status-pill">
+        <div class="status-dot"></div>
+        <span id="status-text">SYSTEM ONLINE</span>
+      </div>
     </header>
 
     <main>
-      <div id="card" class="clock-card">
+      <div id="card" class="card clock-section">
         <div id="dynamic-label" class="clock-label">De tijd bij Frontoffice FZ&IT is momenteel:</div>
         <div id="clock" class="clock">00:00</div>
-        <div id="message" class="message"></div>
+        <div id="message" class="message">Laden...</div>
         
-        <div class="card-countdown">
-          <span id="countdown-label">Weekend in:</span>
-          <span id="countdown-time" class="highlight">...</span>
+        <div id="countdown-container" class="countdown-wrapper" style="visibility: hidden;">
+          <span class="countdown-text"><span id="countdown-label"></span> <span id="countdown-time" class="countdown-highlight"></span></span>
         </div>
       </div>
     </main>
 
     <footer>
-      <div class="ticker-wrap">
+      <div class="ticker-icon">>_LOG:</div>
+      <div class="ticker-wrap" style="width: 100%; overflow: hidden;">
         <div id="counter">Systeem wordt geïnitialiseerd...</div>
       </div>
     </footer>
@@ -313,41 +358,40 @@
         "✨ De Frontoffice slaapt. Jij zou dat ook moeten doen ✨"
       ],
       motivation: [
-        "Het is weer begonnen, die werkdag. We gaan het gewoon doen",
-        "Jij draait als een oude follow me printer. Piepend, maar functioneel",
-        "Je houdt het vol, ook zonder verwarming",
-        "Je zit in een prima flow. Niet geweldig, niet slecht, gewoon... werk",
-        "Systemen crashen? Jij niet. Jij bent de laatste Directory Manager die overeind blijft",
-        "Je hebt de vibe van iemand die Azure AD met één hand kan fixen",
-        "Je bent officieel boven verwachting aan het functioneren",
-        "De energie komt op gang. Je bent basically een menselijke OpenIDM-sync",
-        "Je gaat harder dan Ozan die een teamuitje planned",
-        "Dit begint op iets indrukwekkends te lijken. De backoffice voelt je aanwezigheid",
-        "Halverwege en je straalt als een monitor in het donker",
-        "Je hebt meer momentum dan de mensen in Poseidon",
-        "Je workflow is smoother dan een havercappu van Stacey",
-        "De eindtijd voelt ineens realistisch. Tijd? Tijd is een illusion. Jij niet",
-        "Je bent on fire. Als iemand nu belt met: Mijn wachtwoord werkt niet... you got this",
-        "Je bent basically de Functioneel Beheerder Onstage van deze werkdag",
-        "Je houdt de boel bij elkaar als duct tape in een serverruimte",
-        "Je bent sneller dan het moment dat DM eindelijk werd uitgefaseerd",
-        "Ruik je die finish al? Hij ruikt naar vrijheid en een warme jas",
-        "Laatste fase. Je gaat als een tierelier. De tijd is bang voor jou",
-        "JIJ. BENT. EEN. LEGENDE. De eindtijd buigt voor je. Het universum applaudisseert"
+        "De koffie staat klaar, de systemen ook. We gaan er weer tegenaan vandaag",
+        "Je bent vandaag zo scherp, je zou Stacey's havercappu-machine kunnen kalibreren",
+        "Zelfs Poseidon heeft niet zoveel stroming als jouw workflow op dit moment",
+        "Je bent als een ticket dat direct op 'Opgelost' springt: pure magie",
+        "Ozan is al jaloers op de planning die jij vandaag hanteert",
+        "Je bent de menselijke firewall die elke verstoring buiten de deur houdt",
+        "Je gaat vandaag harder dan een onverwachte update op een vrijdagmiddag",
+        "De backoffice kijkt met bewondering naar je schermtijd. Lekker bezig",
+        "Je bent de enige stabiele factor in deze infrastructuur vandaag",
+        "Volgens mij is het tijd voor een Stacey-special of gewoon een brownie",
+        "Je bent als een schone installatie: geen ruis, alleen maar pure snelheid",
+        "Zelfs de meest complexe Azure-error lost zichzelf op als jij ernaar kijkt",
+        "Je hebt meer focus dan een admin die per ongeluk de productie-db heeft gedropt",
+        "Je bent de onofficiële MVP van de afdeling vandaag, echt waar",
+        "Nog even knallen, je bent sneller klaar dan Ozan een teamuitje regelt",
+        "Je workflow is vandaag zo smooth, het lijkt wel een demo-video",
+        "De finish is in zicht. De VPN houdt het vol, en jij ook",
+        "Je bent de laatste barrière tussen orde en totale digitale chaos",
+        "Nog een paar swipes en tickets, dan mag de jas weer aan",
+        "Je bent de menselijke uitvoering van een 'high availability' cluster",
+        "DONE. Je hebt deze dag ge-commit en gepusht als een eindbaas"
       ],
       moods: ["mooie", "vreselijke", "matige", "neutrale", "prima", "fantastische", "mooie"]
     };
 
-    let lastQuoteKey = "";
     let lastMode = ""; 
     let lastMessageText = "";
-    let weatherString = "Het weerbericht is onderweg...";
+    let weatherString = "Het weerbericht wordt geladen... ✨";
+    let newsString = "Nieuws wordt geladen.. ✨";
     let nextTickerContent = ""; 
     let typingTimer = null;
     let labelToggle = true; 
 
     const two = n => String(n).padStart(2, '0');
-
     const els = {
         clock: document.getElementById('clock'),
         dynamicLabel: document.getElementById('dynamic-label'),
@@ -356,6 +400,9 @@
         card: document.getElementById('card'),
         cdLabel: document.getElementById('countdown-label'),
         cdTime: document.getElementById('countdown-time'),
+        cdContainer: document.getElementById('countdown-container'),
+        statusPill: document.getElementById('status-pill'),
+        statusText: document.getElementById('status-text'),
         orbs: [document.getElementById('orb1'), document.getElementById('orb2'), document.getElementById('orb3'), document.getElementById('orb4'), document.getElementById('orb5')]
     };
 
@@ -367,9 +414,7 @@
         if (i < text.length) {
           els.message.textContent += text.charAt(i);
           i++;
-        } else {
-          clearInterval(typingTimer);
-        }
+        } else { clearInterval(typingTimer); }
       }, 50);
     }
 
@@ -379,8 +424,7 @@
         const data = await res.json();
         const temp = Math.round(data.current.temperature_2m);
         const code = data.current.weather_code;
-        let desc = "Lekker weertje";
-        let icon = "🌤️";
+        let desc = "Lekker weertje"; let icon = "🌤️";
         if (code === 0) { desc = "Zonnig"; icon = "☀️"; }
         else if (code <= 3) { desc = "Licht bewolkt"; icon = "⛅"; }
         else if (code <= 48) { desc = "Mistig"; icon = "🌫️"; }
@@ -390,9 +434,19 @@
         else if (code >= 95) { desc = "Onweer"; icon = "⛈️"; }
         else { desc = "Bewolkt"; icon = "☁️"; }
         weatherString = `Het weer buiten De Haagse is giving ${temp}°C en het is ${desc} ${icon}`;
-      } catch (e) {
-        weatherString = "Weer momenteel niet beschikbaar";
-      }
+      } catch (e) { weatherString = "Weer momenteel niet beschikbaar"; }
+    }
+
+    async function updateNews() {
+      try {
+        const rssUrl = encodeURIComponent('https://feeds.nos.nl/nosnieuwsalgemeen');
+        const res = await fetch(`https://api.rss2json.com/v1/api.json?rss_url=${rssUrl}&t=${Date.now()}`);
+        const data = await res.json();
+        if (data.status === 'ok') {
+          const lastItem = data.items[0];
+          newsString = `LAATSTE NIEUWS // ${lastItem.title.toUpperCase()}`;
+        }
+      } catch (e) { newsString = "Nieuws tijdelijk niet beschikbaar"; }
     }
 
     function checkIsOpen(now) {
@@ -406,137 +460,88 @@
     }
 
     function updateCountdown(now) {
-    const isOpen = checkIsOpen(now);
-    const countdownContainer = document.querySelector('.card-countdown');
-    if (!isOpen) {
-        countdownContainer.style.display = 'none';
-        return;
-    } else {
-        countdownContainer.style.display = 'block';
-    }
+      const isOpen = checkIsOpen(now);
+      if (!isOpen) { 
+        els.cdContainer.style.visibility = 'hidden'; 
+        return; 
+      } else { 
+        els.cdContainer.style.visibility = 'visible'; 
+      }
 
-    const day = now.getDay();
-    const hour = now.getHours();
-    let target = new Date(now);
-    let isWeekendCountdown = true;
+      const day = now.getDay();
+      const hour = now.getHours();
+      let target = new Date(now);
 
-    if (day === 5 && hour >= 8 && hour < 17) {
+      if (day === 5 && hour < 17) {
         target.setHours(17, 0, 0, 0);
         const diff = target - now;
         const h = Math.floor(diff / (1000 * 60 * 60));
         const m = Math.floor((diff / (1000 * 60)) % 60);
-
-        els.cdLabel.textContent = "(Pssstt... het weekend begint over";
-        
-        let displayStr = "";
-        if (h > 0) {
-            displayStr += `${h} uur`;
-        } else {
-            displayStr += `${m} ${m === 1 ? "minuut" : "minuten"}`;
-        }
-        els.cdTime.textContent = displayStr + ")";
+        els.cdLabel.textContent = "(Pssstt... het weekend begint over ";
+        let timeText = h > 0 ? `${h} uur en ${m} min` : `${m} minuten`;
+        els.cdTime.innerHTML = `${timeText}<span style="color: white;">)</span>`;
         return; 
-    }
+      }
+      
+      let daysToFri = (5 - day + 7) % 7;
+      if (daysToFri === 0 && hour >= 17) daysToFri = 7;
+      
+      target.setDate(now.getDate() + daysToFri);
+      target.setHours(17, 0, 0, 0);
 
-    if (day === 5 && hour < 8) {
-        target.setHours(17, 0, 0, 0);
-    } else if (day === 6 || day === 0 || (day === 5 && hour >= 17) || (day === 1 && hour < 8)) {
-        isWeekendCountdown = false;
-        target.setDate(now.getDate() + ((day === 0 ? 1 : day === 1 ? 0 : day === 6 ? 2 : 3)));
-        target.setHours(8, 0, 0, 0);
-    } else {
-        let daysToFri = (5 - day + 7) % 7;
-        target.setDate(now.getDate() + daysToFri);
-        target.setHours(17, 0, 0, 0);
+      const diff = target - now;
+      const d = Math.floor(diff / (1000 * 60 * 60 * 24));
+      const h = Math.floor((diff / (1000 * 60 * 60)) % 24);
+      
+      els.cdLabel.textContent = "(Pssstt... het weekend begint over ";
+      let timeTextLong = d > 0 ? `${d} ${d === 1 ? "dag" : "dagen"} en ${h} uur` : `${h} uur`;
+      els.cdTime.innerHTML = `${timeTextLong}<span style="color: white;">)</span>`;
     }
-
-    const diff = target - now;
-    const d = Math.floor(diff / (1000 * 60 * 60 * 24));
-    const h = Math.floor((diff / (1000 * 60 * 60)) % 24);
-    const m = Math.floor((diff / (1000 * 60)) % 60); 
-
-    els.cdLabel.textContent = isWeekendCountdown ? "(Pssstt... het weekend begint over" : "(Werken begint weer over";
-    
-    let components = [];
-    
-    if (d > 0) {
-        components.push(`${d} ${d === 1 ? "dag" : "dagen"}`);
-    }
-    
-    if (h > 0) {
-        components.push(`${h} uur`);
-    }
-
-    let displayStr = components.join(" en ");
-    
-    if (components.length === 0) {
-        displayStr = `${m} ${m === 1 ? "minuut" : "minuten"}`;
-    }
-
-    els.cdTime.textContent = displayStr + ")";
-}
 
     function updateVisuals(now) {
       const h = now.getHours();
       const m = now.getMinutes();
       const day = now.getDay();
       const isOpen = checkIsOpen(now);
-      let newMode = "night";
-      if (day >= 1 && day <= 5 && h === 16 && m === 29) {
-        newMode = "special";
+      const timeKey = `${two(h)}:${two(m)}`;
+
+      if (h === 16 && m === 29 && day >= 1 && day <= 5) {
+          document.body.style.backgroundColor = "var(--bg-alarm)";
       } else if (isOpen) {
-        newMode = "day";
+          document.body.style.backgroundColor = "var(--bg-work)";
+          els.statusPill.classList.remove('is-offline');
+          els.statusText.textContent = "SYSTEM ONLINE";
+      } else {
+          document.body.style.backgroundColor = "var(--bg-color)";
+          els.statusPill.classList.add('is-offline');
+          els.statusText.textContent = "SYSTEM OFFLINE";
       }
+
+      let newMode = (day >= 1 && day <= 5 && h === 16 && m === 29) ? "special" : (isOpen ? "day" : "night");
+
       if (newMode !== lastMode) {
         lastMode = newMode;
         let c = (newMode === "special") ? ["#ef4444", "#ffba00", "#ffffff", "#ef4444", "#ffba00"] :
                 (newMode === "day") ? ["#9ea700", "#ffba00", "#00b2cd", "#9ea700", "#ffba00"] :
                 ["#1e3a8a", "#4c1d95", "#312e81", "#1e3a8a", "#1e1b4b"];
-        if (newMode === "special") {
-            els.orbs.forEach(orb => orb.classList.add('special-active'));
-            els.card.classList.add('special-glow');
-        } else {
-            els.orbs.forEach(orb => orb.classList.remove('special-active'));
-            els.card.classList.remove('special-glow');
-        }
-        els.orbs.forEach((orb, i) => orb.style.backgroundColor = c[i]);
+        if (newMode === "special") { document.body.classList.add('special-active'); els.card.classList.add('special-glow'); } 
+        else { document.body.classList.remove('special-active'); els.card.classList.remove('special-glow'); }
+        els.orbs.forEach((orb, i) => { if(orb) orb.style.backgroundColor = c[i]; });
       }
 
-      const timeKey = `${two(h)}:${two(m)}`;
-      const textToShow = isOpen 
-        ? (workQuotes[timeKey] || workQuotes[`${two(h)}:${m < 30 ? "00" : "30"}`] || "Lekker bezig!") 
-        : "De Frontoffice is momenteel gesloten.";
-
-      if (textToShow !== lastMessageText) {
-        typeMessage(textToShow);
-        lastMessageText = textToShow;
-        lastQuoteKey = timeKey;
-      }
+      const textToShow = workQuotes[timeKey] || (isOpen ? (workQuotes[`${two(h)}:${m < 30 ? "00" : "30"}`] || "Lekker bezig!") : "De Frontoffice is momenteel gesloten.");
+      if (textToShow !== lastMessageText) { typeMessage(textToShow); lastMessageText = textToShow; }
     }
 
     function toggleLabel() {
       const now = new Date();
-      const isOpen = checkIsOpen(now);
       const dateStr = `Het is vandaag ${CONFIG.days[now.getDay()]} ${now.getDate()} ${CONFIG.months[now.getMonth()]} ${now.getFullYear()}`;
       const defaultStr = "De tijd bij Frontoffice FZ&IT is momenteel:";
-      
       els.dynamicLabel.style.opacity = 0;
-      
       setTimeout(() => {
-        if (isOpen) {
-          if (!labelToggle) {
-            els.dynamicLabel.textContent = dateStr;
-            els.dynamicLabel.style.textTransform = "none";
-          } else {
-            els.dynamicLabel.textContent = defaultStr;
-            els.dynamicLabel.style.textTransform = "none";
-          }
-          labelToggle = !labelToggle;
-        } else {
-          els.dynamicLabel.textContent = defaultStr;
-          els.dynamicLabel.style.textTransform = "uppercase";
-        }
-        els.dynamicLabel.style.opacity = 0.8;
+        els.dynamicLabel.textContent = labelToggle ? defaultStr : dateStr;
+        els.dynamicLabel.style.opacity = 0.9;
+        labelToggle = !labelToggle;
       }, 500);
     }
 
@@ -546,41 +551,28 @@
       updateVisuals(now);
       updateCountdown(now);
       const isOpen = checkIsOpen(now);
-      const isWorkday = (now.getDay() >= 1 && now.getDay() <= 5);
-      let tickerText = "";
-      if (isWorkday && now.getHours() === 7 && now.getMinutes() >= 45) {
-          const totalSecondsUntilEight = (15 * 60) - ((now.getMinutes() - 45) * 60 + now.getSeconds());
-          const displayMins = Math.floor(totalSecondsUntilEight / 60);
-          const displaySecs = totalSecondsUntilEight % 60;
-          tickerText = `⚠️ ATTENTIE: De werkdag begint over precies ${displayMins} minuten en ${displaySecs} seconden ⚠️`;
-          nextTickerContent = tickerText; 
-      } else if (isOpen) {
-          const isFriday = now.getDay() === 5;
-          const endH = isFriday ? 17 : 19.5;
-          const shiftEnd = new Date(now); shiftEnd.setHours(Math.floor(endH), (endH % 1) * 60, 0, 0);
+      if (isOpen) {
+          const shiftEndH = now.getDay() === 5 ? 17 : 19.5;
+          const shiftEnd = new Date(now); shiftEnd.setHours(Math.floor(shiftEndH), (shiftEndH % 1) * 60, 0, 0);
           const minsLeft = Math.ceil((shiftEnd - now) / 60000);
           const motivationIdx = (now.getHours() + now.getDay()) % tickerTexts.motivation.length; 
-          tickerText = `✨ Welkom bij Frontoffice FZ&IT ✨ Nog ${minsLeft} minuten tot einde shift op deze ${tickerTexts.moods[now.getDay()]} ${CONFIG.days[now.getDay()]} ✨ ${tickerTexts.motivation[motivationIdx]}`;
-          nextTickerContent = `${tickerText} ✨ ${weatherString}`;
+          nextTickerContent = `✨ Welkom bij Frontoffice FZ&IT ✨ Nog ${minsLeft} minuten tot einde shift op deze ${tickerTexts.moods[now.getDay()]} ${CONFIG.days[now.getDay()]} ✨ ${tickerTexts.motivation[motivationIdx]} ✨ ${weatherString}  ${newsString} ✨`;
       } else {
-          const outsideIdx = now.getMinutes() % tickerTexts.outside.length;
-          nextTickerContent = tickerTexts.outside[outsideIdx];
+          nextTickerContent = `${tickerTexts.outside[now.getMinutes() % tickerTexts.outside.length]} ✨`;
       }
-      if (els.counter.textContent === "Systeem wordt geïnitialiseerd...") {
-        els.counter.textContent = nextTickerContent;
-      }
+      if (els.counter.textContent.includes("Systeem")) els.counter.textContent = nextTickerContent;
     }
 
-    els.counter.addEventListener('animationiteration', () => {
-      els.counter.textContent = nextTickerContent;
-    });
-
+    els.counter.addEventListener('animationiteration', () => { els.counter.textContent = nextTickerContent; });
+    
     updateWeather();
-    setInterval(updateWeather, 600000); 
-    tick(); 
+    updateNews();
     setInterval(tick, 1000);
-    toggleLabel(); 
-    setInterval(toggleLabel, 20000);
+    setInterval(toggleLabel, 15000);
+    setInterval(updateWeather, 600000);
+    setInterval(updateNews, 900000);    
+    tick();
+    toggleLabel();
   </script>
 </body>
 </html>
